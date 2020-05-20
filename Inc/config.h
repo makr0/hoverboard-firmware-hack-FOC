@@ -126,16 +126,16 @@
 */
 // Control selections
 #define CTRL_TYP_SEL    2               // [-] Control type selection: 0 = Commutation , 1 = Sinusoidal, 2 = FOC Field Oriented Control (default)
-#define CTRL_MOD_REQ    1               // [-] Control mode request: 0 = Open mode, 1 = VOLTAGE mode (default), 2 = SPEED mode, 3 = TORQUE mode. Note: SPEED and TORQUE modes are only available for FOC!
+#define CTRL_MOD_REQ    3               // [-] Control mode request: 0 = Open mode, 1 = VOLTAGE mode (default), 2 = SPEED mode, 3 = TORQUE mode. Note: SPEED and TORQUE modes are only available for FOC!
 #define DIAG_ENA        1               // [-] Motor Diagnostics enable flag: 0 = Disabled, 1 = Enabled (default)
 
 // Limitation settings
 #define I_MOT_MAX       15              // [A] Maximum single motor current limit
 #define I_DC_MAX        17              // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
-#define N_MOT_MAX       1000            // [rpm] Maximum motor speed limit
+#define N_MOT_MAX       2000            // [rpm] Maximum motor speed limit
 
 // Field Weakening / Phase Advance
-#define FIELD_WEAK_ENA  0               // [-] Field Weakening / Phase Advance enable flag: 0 = Disabled (default), 1 = Enabled
+#define FIELD_WEAK_ENA  1               // [-] Field Weakening / Phase Advance enable flag: 0 = Disabled (default), 1 = Enabled
 #define FIELD_WEAK_MAX  5               // [A] Maximum Field Weakening D axis current (only for FOC). Higher current results in higher maximum speed. Up to 10A has been tested using 10" wheels.
 #define PHASE_ADV_MAX   25              // [deg] Maximum Phase Advance angle (only for SIN). Higher angle results in higher maximum speed.
 #define FIELD_WEAK_HI   1500            // [-] Input target High threshold for reaching maximum Field Weakening / Phase Advance. Do NOT set this higher than 1500.
@@ -147,9 +147,9 @@
 // ############################## DEFAULT SETTINGS ############################
 // Default settings will be applied at the end of this config file if not set before
 #define INACTIVITY_TIMEOUT      	8       // Minutes of not driving until poweroff. it is not very precise.
-#define BEEPS_BACKWARD          	1       // 0 or 1
+#define BEEPS_BACKWARD          	0       // 0 or 1
 #define FLASH_WRITE_KEY           0x1234  // Flash writing key, used when writing data to flash memory
-// #define SUPPORT_BUTTONS							  // Define for buttons support on ADC, Nunchuck
+//#define SUPPORT_BUTTONS							  // Define for buttons support on ADC, Nunchuck
 
 /* FILTER is in fixdt(0,16,16): VAL_fixedPoint = VAL_floatingPoint * 2^16. In this case 6553 = 0.1 * 2^16
  * Value of COEFFICIENT is in fixdt(1,16,14)
@@ -187,7 +187,7 @@
  *
 */
 
-// #define DEBUG_SERIAL_USART2          // left sensor board cable, disable if ADC or PPM is used!
+//#define DEBUG_SERIAL_USART2          // left sensor board cable, disable if ADC or PPM is used!
 #if defined(VARIANT_ADC) || defined(VARIANT_PPM)
   #define DEBUG_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
 #endif
