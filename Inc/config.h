@@ -190,6 +190,7 @@
 //#define DEBUG_SERIAL_USART2          // left sensor board cable, disable if ADC or PPM is used!
 #if defined(VARIANT_ADC) || defined(VARIANT_PPM)
   #define DEBUG_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
+//  #define FEEDBACK_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
 #endif
 
 #ifndef VARIANT_TRANSPOTTER
@@ -221,14 +222,14 @@
   #define ADC_PROTECT_TIMEOUT 30        // ADC Protection: number of wrong / missing input commands before safety state is taken
   #define ADC_PROTECT_THRESH  400       // ADC Protection threshold below/above the MIN/MAX ADC values
   #define ADC1_MID_POT                  // ADC1 middle resting poti: comment-out if NOT a middle resting poti
-  #define ADC1_MIN            0         // min ADC1-value while poti at minimum-position (0 - 4095)
-  #define ADC1_MID            1970      // mid ADC1-value while poti at minimum-position (ADC1_MIN - ADC1_MAX)
-  #define ADC1_MAX            4095     // max ADC1-value while poti at maximum-position (0 - 4095)
+  #define ADC1_MIN            800         // min ADC1-value while poti at minimum-position (0 - 4095)
+  #define ADC1_MID            2000      // mid ADC1-value while poti at minimum-position (ADC1_MIN - ADC1_MAX)
+  #define ADC1_MAX            3100     // max ADC1-value while poti at maximum-position (0 - 4095)
   #define ADC2_MID_POT                  // ADC2 middle resting poti: comment-out if NOT a middle resting poti
   #define ADC2_MIN            0         // min ADC2-value while poti at minimum-position (0 - 4095)
   #define ADC2_MID            1920      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
   #define ADC2_MAX            4095      // max ADC2-value while poti at maximum-position (0 - 4095)
-  #define TOTZONE 100
+  #define TOTZONE 400
   #define ADC_TOP_CUT 1000
 #endif
 // ############################# END OF VARIANT_ADC SETTINGS #########################
@@ -398,12 +399,12 @@
 #endif
 #if defined(FEEDBACK_SERIAL_USART2) || defined(CONTROL_SERIAL_USART2) || defined(DEBUG_SERIAL_USART2) || defined(SIDEBOARD_SERIAL_USART2)
   #ifndef USART2_BAUD
-    #define USART2_BAUD           38400                   // UART2 baud rate (long wired cable)
+    #define USART2_BAUD           115200                   // UART2 baud rate (long wired cable)
   #endif
   #define USART2_WORDLENGTH       UART_WORDLENGTH_8B      // UART_WORDLENGTH_8B or UART_WORDLENGTH_9B
 #endif
 #if defined(FEEDBACK_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(DEBUG_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
-  #define USART3_BAUD             38400                   // UART3 baud rate (short wired cable)
+  #define USART3_BAUD             115200                   // UART3 baud rate (short wired cable)
   #define USART3_WORDLENGTH       UART_WORDLENGTH_8B      // UART_WORDLENGTH_8B or UART_WORDLENGTH_9B
 #endif
 
