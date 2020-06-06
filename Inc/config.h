@@ -126,13 +126,13 @@
 */
 // Control selections
 #define CTRL_TYP_SEL    2               // [-] Control type selection: 0 = Commutation , 1 = Sinusoidal, 2 = FOC Field Oriented Control (default)
-#define CTRL_MOD_REQ    3               // [-] Control mode request: 0 = Open mode, 1 = VOLTAGE mode (default), 2 = SPEED mode, 3 = TORQUE mode. Note: SPEED and TORQUE modes are only available for FOC!
+#define CTRL_MOD_REQ    2               // [-] Control mode request: 0 = Open mode, 1 = VOLTAGE mode (default), 2 = SPEED mode, 3 = TORQUE mode. Note: SPEED and TORQUE modes are only available for FOC!
 #define DIAG_ENA        1               // [-] Motor Diagnostics enable flag: 0 = Disabled, 1 = Enabled (default)
 
 // Limitation settings
-#define I_MOT_MAX       3              // [A] Maximum single motor current limit
-#define I_DC_MAX        7              // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
-#define N_MOT_MAX       2 // 25km/h            // [rpm] Maximum motor speed limit
+#define I_MOT_MAX       15              // [A] Maximum single motor current limit
+#define I_DC_MAX        17              // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
+#define N_MOT_MAX       2000 // 25km/h            // [rpm] Maximum motor speed limit
 
 // Field Weakening / Phase Advance
 #define FIELD_WEAK_ENA  0               // [-] Field Weakening / Phase Advance enable flag: 0 = Disabled (default), 1 = Enabled
@@ -160,7 +160,7 @@
 #define DEFAULT_RATE                480   // 30.0f [-] lower value == slower rate [0, 32767] = [0.0, 2047.9375]. Do NOT make rate negative (>32767)
 #define DEFAULT_FILTER              6553  // Default for FILTER 0.1f [-] lower value == softer filter [0, 65535] = [0.0 - 1.0].
 #define DEFAULT_SPEED_COEFFICIENT   16384 // Default for SPEED_COEFFICIENT 1.0f [-] higher value == stronger. [0, 65535] = [-2.0 - 2.0]. In this case 16384 = 1.0 * 2^14
-#define DEFAULT_STEER_COEFFICIENT   0 // 8192  // Defualt for STEER_COEFFICIENT 0.5f [-] higher value == stronger. [0, 65535] = [-2.0 - 2.0]. In this case  8192 = 0.5 * 2^14. If you do not want any steering, set it to 0.
+#define DEFAULT_STEER_COEFFICIENT   8192  // Defualt for STEER_COEFFICIENT 0.5f [-] higher value == stronger. [0, 65535] = [-2.0 - 2.0]. In this case  8192 = 0.5 * 2^14. If you do not want any steering, set it to 0.
 // ######################### END OF DEFAULT SETTINGS ##########################
 
 
@@ -221,14 +221,14 @@
   #define ADC_PROTECT_TIMEOUT 30        // ADC Protection: number of wrong / missing input commands before safety state is taken
   #define ADC_PROTECT_THRESH  400       // ADC Protection threshold below/above the MIN/MAX ADC values
   #define ADC1_MID_POT                  // ADC1 middle resting poti: comment-out if NOT a middle resting poti
-  #define ADC1_MIN            0         // min ADC1-value while poti at minimum-position (0 - 4095)
+  #define ADC1_MIN            300        // min ADC1-value while poti at minimum-position (0 - 4095)
   #define ADC1_MID            1970      // mid ADC1-value while poti at minimum-position (ADC1_MIN - ADC1_MAX)
-  #define ADC1_MAX            4095     // max ADC1-value while poti at maximum-position (0 - 4095)
-  #define ADC2_MID_POT                  // ADC2 middle resting poti: comment-out if NOT a middle resting poti
+  #define ADC1_MAX            3500     // max ADC1-value while poti at maximum-position (0 - 4095)
+   #define ADC2_MID_POT                  // ADC2 middle resting poti: comment-out if NOT a middle resting poti
   #define ADC2_MIN            0         // min ADC2-value while poti at minimum-position (0 - 4095)
-  #define ADC2_MID            1920      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
+  #define ADC2_MID            2060      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
   #define ADC2_MAX            4095      // max ADC2-value while poti at maximum-position (0 - 4095)
-  #define ADC_DEADBAND 100
+  #define ADC_DEADBAND 1300
 #endif
 // ############################# END OF VARIANT_ADC SETTINGS #########################
 
@@ -397,12 +397,12 @@
 #endif
 #if defined(FEEDBACK_SERIAL_USART2) || defined(CONTROL_SERIAL_USART2) || defined(DEBUG_SERIAL_USART2) || defined(SIDEBOARD_SERIAL_USART2)
   #ifndef USART2_BAUD
-    #define USART2_BAUD           38400                   // UART2 baud rate (long wired cable)
+    #define USART2_BAUD           115200                   // UART2 baud rate (long wired cable)
   #endif
   #define USART2_WORDLENGTH       UART_WORDLENGTH_8B      // UART_WORDLENGTH_8B or UART_WORDLENGTH_9B
 #endif
 #if defined(FEEDBACK_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(DEBUG_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
-  #define USART3_BAUD             38400                   // UART3 baud rate (short wired cable)
+  #define USART3_BAUD             115200                   // UART3 baud rate (short wired cable)
   #define USART3_WORDLENGTH       UART_WORDLENGTH_8B      // UART_WORDLENGTH_8B or UART_WORDLENGTH_9B
 #endif
 

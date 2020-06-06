@@ -849,7 +849,7 @@ void readCommand(void) {
  * This function realizes a dead-band around 0 and scales the input within a min and a max
  */
 int addDeadBand(int16_t u, int16_t deadBand, int16_t min, int16_t max) {
-#if defined(CONTROL_PPM) || defined(CONTROL_PWM) ||defined(CONTROL_PWM )
+#if defined(CONTROL_PPM) || defined(CONTROL_PWM) ||defined(CONTROL_ADC )
   int outVal = 0;
   if(u > -deadBand && u < deadBand) {
     outVal = 0;
