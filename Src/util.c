@@ -656,42 +656,22 @@ void readCommand(void) {
     #endif
 
     #ifdef CONTROL_ADC
+      uint16_t deadbanded_tx2, deadbanded_rx2;
+      deadbanded_tx2 = addDeadBand(adc_buffer.l_tx2,ADC_DEADBAND,0,4096);
+      deadbanded_rx2 = addDeadBand(adc_buffer.l_rx2,ADC_DEADBAND,0,4096);
       // ADC values range: 0-4095, see ADC-calibration in config.h
       #ifdef ADC1_MID_POT
-        cmd1 = CLAMP((adc_buffer.l_tx2 - ADC1_MID_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MID_CAL), 0, INPUT_MAX) 
-              -CLAMP((ADC1_MID_CAL - adc_buffer.l_tx2) * INPUT_MAX / (ADC1_MID_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1    
-        if(abs(cmd1) < TOTZONE ) cmd1 = 0;
-        else
-        {
-          if(cmd1 > 0 ){
-            cmd1 -= TOTZONE;
-            cmd1 += cmd1/(1000/TOTZONE);
-          }  else {
-            cmd1 += TOTZONE;
-            cmd1 -= cmd2/(1000/TOTZONE);
-          }
-        }
-        
+        cmd1 = CLAMP((deadbanded_tx2 - ADC1_MID_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MID_CAL), 0, INPUT_MAX) 
+              -CLAMP((ADC1_MID_CAL - deadbanded_tx2) * INPUT_MAX / (ADC1_MID_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1        
       #else
-        cmd1 = CLAMP((adc_buffer.l_tx2 - ADC1_MIN_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1
+        cmd1 = CLAMP((deadbanded_tx2 - ADC1_MIN_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1
       #endif
 
       #ifdef ADC2_MID_POT
-        cmd2 = CLAMP((adc_buffer.l_rx2 - ADC2_MID_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MID_CAL), 0, INPUT_MAX)  
-              -CLAMP((ADC2_MID_CAL - adc_buffer.l_rx2) * INPUT_MAX / (ADC2_MID_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2        
-        if(abs(cmd2) < TOTZONE ) cmd2 = 0;
-        else
-        {
-          if(cmd2 > 0 ){
-            cmd2 -= TOTZONE;
-            cmd2 += cmd2/(1000/TOTZONE);
-          }  else {
-            cmd2 += TOTZONE;
-            cmd2 -= cmd2/(1000/TOTZONE);
-          }
-        }
+        cmd2 = CLAMP((deadbanded_rx2 - ADC2_MID_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MID_CAL), 0, INPUT_MAX)  
+              -CLAMP((ADC2_MID_CAL - deadbanded_rx2) * INPUT_MAX / (ADC2_MID_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2        
       #else
-        cmd2 = CLAMP((adc_buffer.l_rx2 - ADC2_MIN_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2
+        cmd2 = CLAMP((deadbanded_rx2 - ADC2_MIN_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2
       #endif
 
       #ifdef ADC_PROTECT_ENA
@@ -869,7 +849,7 @@ void readCommand(void) {
  * This function realizes a dead-band around 0 and scales the input within a min and a max
  */
 int addDeadBand(int16_t u, int16_t deadBand, int16_t min, int16_t max) {
-#if defined(CONTROL_PPM) || defined(CONTROL_PWM)
+#if defined(CONTROL_PPM) || defined(CONTROL_PWM) ||defined(CONTROL_PWM )
   int outVal = 0;
   if(u > -deadBand && u < deadBand) {
     outVal = 0;
