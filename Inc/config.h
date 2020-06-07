@@ -132,7 +132,7 @@
 // Limitation settings
 #define I_MOT_MAX       15              // [A] Maximum single motor current limit
 #define I_DC_MAX        17              // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
-#define N_MOT_MAX       2000 // 25km/h            // [rpm] Maximum motor speed limit
+#define N_MOT_MAX       1000            // [rpm] Maximum motor speed limit
 
 // Field Weakening / Phase Advance
 #define FIELD_WEAK_ENA  0               // [-] Field Weakening / Phase Advance enable flag: 0 = Disabled (default), 1 = Enabled
@@ -148,7 +148,7 @@
 // Default settings will be applied at the end of this config file if not set before
 #define INACTIVITY_TIMEOUT      	8       // Minutes of not driving until poweroff. it is not very precise.
 #define BEEPS_BACKWARD          	0       // 0 or 1
-#define FLASH_WRITE_KEY           0x1235  // Flash writing key, used when writing data to flash memory
+#define FLASH_WRITE_KEY           0x1234  // Flash writing key, used when writing data to flash memory
 //#define SUPPORT_BUTTONS							  // Define for buttons support on ADC, Nunchuck
 
 /* FILTER is in fixdt(0,16,16): VAL_fixedPoint = VAL_floatingPoint * 2^16. In this case 6553 = 0.1 * 2^16
@@ -227,10 +227,10 @@
   #define ADC1_MAX            3100     // max ADC1-value while poti at maximum-position (0 - 4095)
   #define ADC2_MID_POT                  // ADC2 middle resting poti: comment-out if NOT a middle resting poti
   #define ADC2_MIN            760         // min ADC2-value while poti at minimum-position (0 - 4095)
-  #define ADC2_MID            1880      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
+  #define ADC2_MID            1800      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
   #define ADC2_MAX            3100      // max ADC2-value while poti at maximum-position (0 - 4095)
   #define CMD1_DEADBAND 200            // steer
-  #define CMD2_DEADBAND 2            // throttle
+  #define CMD2_DEADBAND 200            // throttle
 #endif
 // ############################# END OF VARIANT_ADC SETTINGS #########################
 

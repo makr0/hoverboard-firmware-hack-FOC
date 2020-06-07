@@ -182,7 +182,7 @@ static uint8_t button1, button2;
   #else
   static uint16_t ADC1_MID_CAL = 0;
   #endif
-  #ifdef ADC1_MID_POT
+  #ifdef ADC2_MID_POT
   static uint16_t ADC2_MID_CAL = ADC2_MID;
   #else
   static uint16_t ADC2_MID_CAL = 0;
@@ -281,9 +281,11 @@ void Input_Init(void) {
       EE_ReadVariable(VirtAddVarTab[1], &ADC1_MIN_CAL);
       EE_ReadVariable(VirtAddVarTab[2], &ADC1_MAX_CAL);
       EE_ReadVariable(VirtAddVarTab[3], &ADC1_MID_CAL);
+
       EE_ReadVariable(VirtAddVarTab[4], &ADC2_MIN_CAL);
       EE_ReadVariable(VirtAddVarTab[5], &ADC2_MAX_CAL);
       EE_ReadVariable(VirtAddVarTab[6], &ADC2_MID_CAL);
+
       EE_ReadVariable(VirtAddVarTab[7], &i_max);
       EE_ReadVariable(VirtAddVarTab[8], &n_max);
       rtP_Left.i_max  = i_max;
@@ -575,7 +577,7 @@ void poweroffPressCheck(void) {
             updateCurSpdLim();
             shortBeep(5);
           } else {                                          // Long press: Calibrate ADC Limits
-            longBeep(16); 
+            longBeep(32); 
             adcCalibLim();
             shortBeep(5);
           }
@@ -660,7 +662,7 @@ void readCommand(void) {
       #ifdef ADC1_MID_POT
         cmd1 = CLAMP((adc_buffer.l_tx2 - ADC1_MID_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MID_CAL), 0, INPUT_MAX) 
               -CLAMP((ADC1_MID_CAL - adc_buffer.l_tx2) * INPUT_MAX / (ADC1_MID_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1 
-//        cmd1 = addDeadBand(cmd1,CMD1_DEADBAND,INPUT_MIN,INPUT_MAX);       
+        cmd1 = addDeadBand(cmd1,CMD1_DEADBAND,INPUT_MIN,INPUT_MAX);       
       #else
         cmd1 = CLAMP((adc_buffer.l_tx2 - ADC1_MIN_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1
       #endif
@@ -669,7 +671,7 @@ void readCommand(void) {
       #ifdef ADC2_MID_POT
         cmd2 = CLAMP((adc_buffer.l_rx2 - ADC2_MID_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MID_CAL), 0, INPUT_MAX)  
               -CLAMP((ADC2_MID_CAL - adc_buffer.l_rx2) * INPUT_MAX / (ADC2_MID_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2        
-//        cmd2 = addDeadBand(cmd2,CMD2_DEADBAND,INPUT_MIN,INPUT_MAX);       
+        cmd2 = addDeadBand(cmd2,CMD2_DEADBAND,INPUT_MIN,INPUT_MAX);       
       #else
         cmd2 = CLAMP((adc_buffer.l_rx2 - ADC2_MIN_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2
       #endif
