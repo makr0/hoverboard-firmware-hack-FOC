@@ -206,6 +206,9 @@ int main(void) {
         shortBeep(6);                     // make 2 beeps indicating the motor enable
         shortBeep(4); HAL_Delay(100);
         enable = 1;                       // enable motors
+      } else {
+        enable=1;
+
       }
 
       // ####### VARIANT_HOVERCAR ####### 

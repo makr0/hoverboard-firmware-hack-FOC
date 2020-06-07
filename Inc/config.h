@@ -132,7 +132,7 @@
 // Limitation settings
 #define I_MOT_MAX       15              // [A] Maximum single motor current limit
 #define I_DC_MAX        17              // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
-#define N_MOT_MAX       2000 // 25km/h            // [rpm] Maximum motor speed limit
+#define N_MOT_MAX       1000            // [rpm] Maximum motor speed limit
 
 // Field Weakening / Phase Advance
 #define FIELD_WEAK_ENA  0               // [-] Field Weakening / Phase Advance enable flag: 0 = Disabled (default), 1 = Enabled
@@ -190,6 +190,7 @@
 //#define DEBUG_SERIAL_USART2          // left sensor board cable, disable if ADC or PPM is used!
 #if defined(VARIANT_ADC) || defined(VARIANT_PPM)
   #define DEBUG_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
+//  #define FEEDBACK_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
 #endif
 
 #ifndef VARIANT_TRANSPOTTER
@@ -221,14 +222,15 @@
   #define ADC_PROTECT_TIMEOUT 30        // ADC Protection: number of wrong / missing input commands before safety state is taken
   #define ADC_PROTECT_THRESH  400       // ADC Protection threshold below/above the MIN/MAX ADC values
   #define ADC1_MID_POT                  // ADC1 middle resting poti: comment-out if NOT a middle resting poti
-  #define ADC1_MIN            300        // min ADC1-value while poti at minimum-position (0 - 4095)
-  #define ADC1_MID            1970      // mid ADC1-value while poti at minimum-position (ADC1_MIN - ADC1_MAX)
-  #define ADC1_MAX            3500     // max ADC1-value while poti at maximum-position (0 - 4095)
-   #define ADC2_MID_POT                  // ADC2 middle resting poti: comment-out if NOT a middle resting poti
-  #define ADC2_MIN            0         // min ADC2-value while poti at minimum-position (0 - 4095)
-  #define ADC2_MID            2060      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
-  #define ADC2_MAX            4095      // max ADC2-value while poti at maximum-position (0 - 4095)
-  #define ADC_DEADBAND 1300
+  #define ADC1_MIN            800         // min ADC1-value while poti at minimum-position (0 - 4095)
+  #define ADC1_MID            1000      // mid ADC1-value while poti at minimum-position (ADC1_MIN - ADC1_MAX)
+  #define ADC1_MAX            3100     // max ADC1-value while poti at maximum-position (0 - 4095)
+  #define ADC2_MID_POT                  // ADC2 middle resting poti: comment-out if NOT a middle resting poti
+  #define ADC2_MIN            760         // min ADC2-value while poti at minimum-position (0 - 4095)
+  #define ADC2_MID            1800      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
+  #define ADC2_MAX            3100      // max ADC2-value while poti at maximum-position (0 - 4095)
+  #define CMD1_DEADBAND 200            // steer
+  #define CMD2_DEADBAND 200            // throttle
 #endif
 // ############################# END OF VARIANT_ADC SETTINGS #########################
 
