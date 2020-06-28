@@ -126,16 +126,16 @@
 */
 // Control selections
 #define CTRL_TYP_SEL    2               // [-] Control type selection: 0 = Commutation , 1 = Sinusoidal, 2 = FOC Field Oriented Control (default)
-#define CTRL_MOD_REQ    2               // [-] Control mode request: 0 = Open mode, 1 = VOLTAGE mode (default), 2 = SPEED mode, 3 = TORQUE mode. Note: SPEED and TORQUE modes are only available for FOC!
+#define CTRL_MOD_REQ    3               // [-] Control mode request: 0 = Open mode, 1 = VOLTAGE mode (default), 2 = SPEED mode, 3 = TORQUE mode. Note: SPEED and TORQUE modes are only available for FOC!
 #define DIAG_ENA        1               // [-] Motor Diagnostics enable flag: 0 = Disabled, 1 = Enabled (default)
 
 // Limitation settings
-#define I_MOT_MAX       15              // [A] Maximum single motor current limit
-#define I_DC_MAX        17              // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
+#define I_MOT_MAX       12              // [A] Maximum single motor current limit
+#define I_DC_MAX        14              // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
 #define N_MOT_MAX       1000            // [rpm] Maximum motor speed limit
 
 // Field Weakening / Phase Advance
-#define FIELD_WEAK_ENA  0               // [-] Field Weakening / Phase Advance enable flag: 0 = Disabled (default), 1 = Enabled
+#define FIELD_WEAK_ENA  1              // [-] Field Weakening / Phase Advance enable flag: 0 = Disabled (default), 1 = Enabled
 #define FIELD_WEAK_MAX  5               // [A] Maximum Field Weakening D axis current (only for FOC). Higher current results in higher maximum speed. Up to 10A has been tested using 10" wheels.
 #define PHASE_ADV_MAX   25              // [deg] Maximum Phase Advance angle (only for SIN). Higher angle results in higher maximum speed.
 #define FIELD_WEAK_HI   1500            // [-] Input target High threshold for reaching maximum Field Weakening / Phase Advance. Do NOT set this higher than 1500.
@@ -158,7 +158,7 @@
 */
 // Value of RATE is in fixdt(1,16,4): VAL_fixedPoint = VAL_floatingPoint * 2^4. In this case 480 = 30 * 2^4
 #define DEFAULT_RATE                480   // 30.0f [-] lower value == slower rate [0, 32767] = [0.0, 2047.9375]. Do NOT make rate negative (>32767)
-#define DEFAULT_FILTER              6553  // Default for FILTER 0.1f [-] lower value == softer filter [0, 65535] = [0.0 - 1.0].
+#define DEFAULT_FILTER              65535  // Default for FILTER 0.1f [-] lower value == softer filter [0, 65535] = [0.0 - 1.0].
 #define DEFAULT_SPEED_COEFFICIENT   16384 // Default for SPEED_COEFFICIENT 1.0f [-] higher value == stronger. [0, 65535] = [-2.0 - 2.0]. In this case 16384 = 1.0 * 2^14
 #define DEFAULT_STEER_COEFFICIENT   8192  // Defualt for STEER_COEFFICIENT 0.5f [-] higher value == stronger. [0, 65535] = [-2.0 - 2.0]. In this case  8192 = 0.5 * 2^14. If you do not want any steering, set it to 0.
 // ######################### END OF DEFAULT SETTINGS ##########################
@@ -229,8 +229,15 @@
   #define ADC2_MIN            760         // min ADC2-value while poti at minimum-position (0 - 4095)
   #define ADC2_MID            1800      // mid ADC2-value while poti at minimum-position (ADC2_MIN - ADC2_MAX)
   #define ADC2_MAX            3100      // max ADC2-value while poti at maximum-position (0 - 4095)
-  #define CMD1_DEADBAND 200            // steer
-  #define CMD2_DEADBAND 200            // throttle
+  #define CMD1_DEADBAND 10            // steer
+  #define CMD2_DEADBAND 10           // throttle
+  //  If VAL_floatingPoint >= 0, VAL_fixedPoint = VAL_floatingPoint * 2^14
+  // If VAL_floatingPoint < 0,  VAL_fixedPoint = 2^16 + floor(VAL_floatingPoint * 2^14).
+
+  #define SPEED_COEFFICIENT   16383    // 1.0f -  0.0 to ~2.0?
+  #define STEER_COEFFICIENT   49152    // -1.0f -  -1.0 to 1.0
+  #define STEER_TANK // TANK style steering: ADC1 -> speed-L ADC2 -> speed-R
+
 #endif
 // ############################# END OF VARIANT_ADC SETTINGS #########################
 
@@ -343,11 +350,11 @@
   #define ADC2_MAX            2200      // max ADC2-value while poti at maximum-position (0 - 4095)
   #define SPEED_COEFFICIENT   16384     //  1.0f
   #define STEER_COEFFICIENT   0         //  0.0f
-  // #define INVERT_R_DIRECTION           // Invert rotation of right motor
-  // #define INVERT_L_DIRECTION           // Invert rotation of left motor
-  #define SIDEBOARD_SERIAL_USART3
-  #define FEEDBACK_SERIAL_USART3        // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
-  // #define DEBUG_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
+  #define INVERT_R_DIRECTION           // Invert rotation of right motor
+  #define INVERT_L_DIRECTION           // Invert rotation of left motor
+  //#define SIDEBOARD_SERIAL_USART3
+  //#define FEEDBACK_SERIAL_USART3        // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
+  #define DEBUG_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
 #endif
 
 // Multiple tap detection: default DOUBLE Tap on Brake pedal (4 pulses)

@@ -45,12 +45,7 @@ void consoleScope(void) {
                 "1:%i 2:%i 3:%i 4:%i 5:%i 6:%i 7:%i 8:%i\r\n",
                 ch_buf[0], ch_buf[1], ch_buf[2], ch_buf[3], ch_buf[4], ch_buf[5], ch_buf[6], ch_buf[7]);
 
-    if(UART_DMA_CHANNEL_TX->CNDTR == 0) {
-      UART_DMA_CHANNEL_TX->CCR  &= ~DMA_CCR_EN;
-      UART_DMA_CHANNEL_TX->CNDTR = strLength;
-      UART_DMA_CHANNEL_TX->CMAR  = (uint32_t)uart_buf;
-      UART_DMA_CHANNEL_TX->CCR  |= DMA_CCR_EN;
-    }
+    consoleLog2(uart_buf,strLength);
   #endif
 }
 
@@ -60,6 +55,17 @@ void consoleLog(char *message)
     if(UART_DMA_CHANNEL_TX->CNDTR == 0) {
       UART_DMA_CHANNEL_TX->CCR  &= ~DMA_CCR_EN;
       UART_DMA_CHANNEL_TX->CNDTR = strlen((char *)(uintptr_t)message);
+      UART_DMA_CHANNEL_TX->CMAR  = (uint32_t)message;
+      UART_DMA_CHANNEL_TX->CCR  |= DMA_CCR_EN;
+    }
+  #endif
+}
+void consoleLog2(char *message, int strlength)
+{
+  #if defined DEBUG_SERIAL_ASCII && (defined DEBUG_SERIAL_USART2 || defined DEBUG_SERIAL_USART3)
+    if(UART_DMA_CHANNEL_TX->CNDTR == 0) {
+      UART_DMA_CHANNEL_TX->CCR  &= ~DMA_CCR_EN;
+      UART_DMA_CHANNEL_TX->CNDTR = strlength;
       UART_DMA_CHANNEL_TX->CMAR  = (uint32_t)message;
       UART_DMA_CHANNEL_TX->CCR  |= DMA_CCR_EN;
     }

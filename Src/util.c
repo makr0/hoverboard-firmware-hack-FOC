@@ -353,9 +353,9 @@ void Input_Init(void) {
 /* =========================== General Functions =========================== */
 
 void poweronMelody(void) {
-	for (int i = 8; i >= 0; i--) {
+	for (int i = 8; i >= 5; i--) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(100);
+		HAL_Delay(200);
 	}
 	buzzerFreq = 0;
 }
@@ -407,9 +407,9 @@ void calcAvgSpeed(void) {
  * - press the power button to confirm or wait for the 20 sec timeout
  */
 void adcCalibLim(void) {
-  if (speedAvgAbs > 5) {    // do not enter this mode if motors are spinning
-    return;
-  }
+//  if (speedAvgAbs > 5) {    // do not enter this mode if motors are spinning
+//    return;
+//  }
   #ifdef CONTROL_ADC
     consoleLog("ADC calibration started... ");
     
@@ -427,7 +427,7 @@ void adcCalibLim(void) {
     adc_cal_valid = 1;
 
     // Extract MIN, MAX and MID from ADC while the power button is not pressed
-    while (!HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) && adc_cal_timeout < 4000) {   // 20 sec timeout
+    while (!HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) && adc_cal_timeout < 2000) {   // 10 sec timeout
       filtLowPass32(adc_buffer.l_tx2, FILTER, &adc1_fixdt);
       filtLowPass32(adc_buffer.l_rx2, FILTER, &adc2_fixdt);
       ADC1_MID_temp = (uint16_t)CLAMP(adc1_fixdt >> 16, 0, 4095);                   // convert fixed-point to integer
@@ -477,9 +477,9 @@ void adcCalibLim(void) {
  * - press the power button to confirm or wait for the 10 sec timeout
  */
 void updateCurSpdLim(void) {
-  if (speedAvgAbs > 5) {    // do not enter this mode if motors are spinning
-    return;
-  }
+  //if (speedAvgAbs > 5) {    // do not enter this mode if motors are spinning
+  //  return;
+  //}
   #ifdef CONTROL_ADC
     consoleLog("Torque and Speed limits update started... ");
 
@@ -488,14 +488,17 @@ void updateCurSpdLim(void) {
     uint16_t cur_spd_timeout = 0;
     uint16_t cur_factor;    // fixdt(0,16,16)
     uint16_t spd_factor;    // fixdt(0,16,16)
+    int strLength;
+    static volatile uint8_t uart_buf[100];
+
 
     // Wait for the power button press
-    while (!HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) && cur_spd_timeout < 2000) {  // 10 sec timeout
+    while (!HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) && cur_spd_timeout < 100) {  // 10 sec timeout
       filtLowPass32(adc_buffer.l_tx2, FILTER, &adc1_fixdt);
       filtLowPass32(adc_buffer.l_rx2, FILTER, &adc2_fixdt);
       cur_spd_timeout++;
-      HAL_Delay(5);      
-    }
+      HAL_Delay(200);      
+    
 
     // Calculate scaling factors
     cur_factor      = CLAMP((adc1_fixdt - (ADC1_MIN_CAL << 16)) / (ADC1_MAX_CAL - ADC1_MIN_CAL), 6553, 65535);    // ADC1, MIN_cur(10%) = 1.5 A 
@@ -506,6 +509,13 @@ void updateCurSpdLim(void) {
     rtP_Left.n_max  = (int16_t)((N_MOT_MAX * spd_factor) >> 12);                 // fixdt(0,16,16) to fixdt(1,16,4)
     rtP_Right.i_max = rtP_Left.i_max;
     rtP_Right.n_max = rtP_Left.n_max;
+    strLength = sprintf((char *)(uintptr_t)uart_buf,
+                "i_max:%i n_max:%i | ttl: %i\r\n",
+                rtP_Left.i_max, rtP_Left.n_max,100-cur_spd_timeout);
+
+    consoleLog2(uart_buf,strLength);
+
+}
 
     cur_spd_valid   = 1;
     consoleLog("OK\n");
@@ -550,9 +560,9 @@ void poweroff(void) {
 	buzzerPattern = 0;
 	enable = 0;
 	consoleLog("-- Motors disabled --\r\n");
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 5; i++) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(100);
+		HAL_Delay(50);
 	}
   saveConfig();
 	HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_RESET);
@@ -567,17 +577,22 @@ void poweroffPressCheck(void) {
         uint16_t cnt_press = 0;
         while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
           HAL_Delay(10);
-          if (cnt_press++ == 5 * 100) { shortBeep(5); }          
+          if (cnt_press++ == 5 * 100) {
+            shortBeep(5); 
+            consoleLog("Double press: Adjust Max Current, Max Speed");                         
+            consoleLog("release to update ADC limits");                
+          }          
         }
-        if (cnt_press >= 5 * 100) {                         // Check if press is more than 5 sec
-          HAL_Delay(300);        
+        if (cnt_press >= 2 * 100) {// Check if press is more than 2 sec
+          HAL_Delay(500);        
           if (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {  // Double press: Adjust Max Current, Max Speed
             while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { HAL_Delay(10); }  
             longBeep(8);
             updateCurSpdLim();
             shortBeep(5);
           } else {                                          // Long press: Calibrate ADC Limits
-            longBeep(32); 
+            longBeep(2);
+            HAL_Delay(200); 
             adcCalibLim();
             shortBeep(5);
           }
@@ -658,16 +673,13 @@ void readCommand(void) {
     #endif
 
     #ifdef CONTROL_ADC
-      uint16_t deadbanded_tx2, deadbanded_rx2;
-      deadbanded_tx2 = addDeadBand(adc_buffer.l_tx2,ADC_DEADBAND,0,4096);
-      deadbanded_rx2 = addDeadBand(adc_buffer.l_rx2,ADC_DEADBAND,0,4096);
       // ADC values range: 0-4095, see ADC-calibration in config.h
       #ifdef ADC1_MID_POT
         cmd1 = CLAMP((adc_buffer.l_tx2 - ADC1_MID_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MID_CAL), 0, INPUT_MAX) 
               -CLAMP((ADC1_MID_CAL - adc_buffer.l_tx2) * INPUT_MAX / (ADC1_MID_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1 
         cmd1 = addDeadBand(cmd1,CMD1_DEADBAND,INPUT_MIN,INPUT_MAX);       
       #else
-        cmd1 = CLAMP((deadbanded_tx2 - ADC1_MIN_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1
+        cmd1 = CLAMP((adc_buffer.l_tx2 - ADC1_MIN_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1
       #endif
       
 
@@ -676,7 +688,7 @@ void readCommand(void) {
               -CLAMP((ADC2_MID_CAL - adc_buffer.l_rx2) * INPUT_MAX / (ADC2_MID_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2        
         cmd2 = addDeadBand(cmd2,CMD2_DEADBAND,INPUT_MIN,INPUT_MAX);       
       #else
-        cmd2 = CLAMP((deadbanded_rx2 - ADC2_MIN_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2
+        cmd2 = CLAMP((adc_buffer.l_rx2 - ADC2_MIN_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2
       #endif
 
       #ifdef ADC_PROTECT_ENA
@@ -1077,15 +1089,25 @@ void mixerFcn(int16_t rtu_speed, int16_t rtu_steer, int16_t *rty_speedR, int16_t
   int16_t prodSteer;
   int32_t tmp;
 
+  #ifdef STEER_TANK
+  tmp = -rtu_steer * 16383 >> 14;
+  #else
   prodSpeed   = (int16_t)((rtu_speed * (int16_t)SPEED_COEFFICIENT) >> 14);
   prodSteer   = (int16_t)((rtu_steer * (int16_t)STEER_COEFFICIENT) >> 14);
-
   tmp         = prodSpeed - prodSteer;  
+  #endif
+
+
   tmp         = CLAMP(tmp, -32768, 32767);  // Overflow protection
   *rty_speedR = (int16_t)(tmp >> 4);        // Convert from fixed-point to int 
   *rty_speedR = CLAMP(*rty_speedR, INPUT_MIN, INPUT_MAX);
 
+  #ifdef STEER_TANK
+  tmp = rtu_speed * 16383 >> 14;
+  #else
   tmp         = prodSpeed + prodSteer;
+  #endif
+
   tmp         = CLAMP(tmp, -32768, 32767);  // Overflow protection
   *rty_speedL = (int16_t)(tmp >> 4);        // Convert from fixed-point to int
   *rty_speedL = CLAMP(*rty_speedL, INPUT_MIN, INPUT_MAX);
