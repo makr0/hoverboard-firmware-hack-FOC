@@ -257,6 +257,18 @@ int main(void) {
           }
         #endif
       #endif
+      #ifdef BRAKE_MORE
+        if(cmd1>0 && speed>0){
+            rtP_Left.i_max = ((BRAKE_CURRENT) * A2BIT_CONV) << 4;
+            rtP_Right.i_max = rtP_Left.i_max;
+            buzzerFreq = 8;
+        } else {
+            rtP_Left.i_max  = (I_MOT_MAX * A2BIT_CONV) << 4;        // fixdt(1,16,4)
+            rtP_Right.i_max = rtP_Left.i_max;
+            if(buzzerFreq == 8) buzzerFreq = 0;
+        }
+      #endif
+
 
       // ####### MIXER #######
       // speedR = CLAMP((int)(speed * SPEED_COEFFICIENT -  steer * STEER_COEFFICIENT), INPUT_MIN, INPUT_MA);
