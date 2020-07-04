@@ -286,7 +286,9 @@ void Input_Init(void) {
       EE_ReadVariable(VirtAddVarTab[5], &ADC2_MAX_CAL);
       EE_ReadVariable(VirtAddVarTab[6], &ADC2_MID_CAL);
 
-      EE_ReadVariable(VirtAddVarTab[7], &i_max);
+      //EE_ReadVariable(VirtAddVarTab[7], &i_max);
+      i_max = (I_MOT_MAX * A2BIT_CONV) << 4;
+
       EE_ReadVariable(VirtAddVarTab[8], &n_max);
       rtP_Left.i_max  = i_max;
       rtP_Left.n_max  = n_max;
@@ -502,9 +504,11 @@ void updateCurSpdLim(void) {
     spd_factor      = CLAMP((adc2_fixdt - (ADC2_MIN_CAL << 16)) / (ADC2_MAX_CAL - ADC2_MIN_CAL), 3276, 65535);    // ADC2, MIN_spd(5%)  = 50 rpm
 
     // Update maximum limits
-    rtP_Left.i_max  = (int16_t)((I_MOT_MAX * A2BIT_CONV * cur_factor) >> 12);    // fixdt(0,16,16) to fixdt(1,16,4)
+    //rtP_Left.i_max  = (int16_t)((I_MOT_MAX * A2BIT_CONV * cur_factor) >> 12);    // fixdt(0,16,16) to fixdt(1,16,4)
+    rtP_Left.i_max = (I_MOT_MAX * A2BIT_CONV) << 4;;
     rtP_Left.n_max  = (int16_t)((N_MOT_MAX * spd_factor) >> 12);                 // fixdt(0,16,16) to fixdt(1,16,4)
-    rtP_Right.i_max = rtP_Left.i_max;
+    //rtP_Right.i_max = rtP_Left.i_max;
+    rtP_Right.i_max = (I_MOT_MAX * A2BIT_CONV) << 4;
     rtP_Right.n_max = rtP_Left.n_max;
 
     cur_spd_valid   = 1;
