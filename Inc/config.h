@@ -358,7 +358,7 @@
 #endif
 
 // Multiple tap detection: default DOUBLE Tap on Brake pedal (4 pulses)
-#define MULTIPLE_TAP_NR       2 * 2      // [-] Define tap number: MULTIPLE_TAP_NR = number_of_taps * 2, number_of_taps = 1 (for single taping), 2 (for double tapping), 3 (for triple tapping), etc...
+#define MULTIPLE_TAP_NR       0 //2 * 2      // [-] Define tap number: MULTIPLE_TAP_NR = number_of_taps * 2, number_of_taps = 1 (for single taping), 2 (for double tapping), 3 (for triple tapping), etc...
 #define MULTIPLE_TAP_HI       600        // [-] Multiple tap detection High hysteresis threshold
 #define MULTIPLE_TAP_LO       200        // [-] Multiple tap detection Low hysteresis threshold
 #define MULTIPLE_TAP_TIMEOUT  2000       // [ms] Multiple tap detection Timeout period. The taps need to happen within this time window to be accepted.

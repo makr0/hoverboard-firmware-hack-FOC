@@ -213,26 +213,30 @@ int main(void) {
 
       // ####### VARIANT_HOVERCAR ####### 
       #ifdef VARIANT_HOVERCAR
-        // Calculate speed Blend, a number between [0, 1] in fixdt(0,16,15)
-        uint16_t speedBlend;       
-        speedBlend = (uint16_t)(((CLAMP(speedAvgAbs,10,60) - 10) << 15) / 50);     // speedBlend [0,1] is within [10 rpm, 60rpm]
+        #if MULTIPLE_TAP_NR == 0
+          cmd2 = cmd2 - cmd1;
+        #else
+          // Calculate speed Blend, a number between [0, 1] in fixdt(0,16,15)
+          uint16_t speedBlend;       
+          speedBlend = (uint16_t)(((CLAMP(speedAvgAbs,10,60) - 10) << 15) / 50);     // speedBlend [0,1] is within [10 rpm, 60rpm]
 
-        // Check if Hovercar is physically close to standstill to enable Double tap detection on Brake pedal for Reverse functionality
-        if (speedAvgAbs < 60) {
-          multipleTapDet(cmd1, HAL_GetTick(), &MultipleTapBreak);   // Break pedal in this case is "cmd1" variable
-        }
+          // Check if Hovercar is physically close to standstill to enable Double tap detection on Brake pedal for Reverse functionality
+          if (speedAvgAbs < 60) {
+            multipleTapDet(cmd1, HAL_GetTick(), &MultipleTapBreak);   // Break pedal in this case is "cmd1" variable
+          }
 
-        // If Brake pedal (cmd1) is pressed, bring to 0 also the Throttle pedal (cmd2) to avoid "Double pedal" driving          
-        if (cmd1 > 20) {
-          cmd2 = (int16_t)((cmd2 * speedBlend) >> 15);
-        }
+          // If Brake pedal (cmd1) is pressed, bring to 0 also the Throttle pedal (cmd2) to avoid "Double pedal" driving          
+          if (cmd1 > 20) {
+            cmd2 = (int16_t)((cmd2 * speedBlend) >> 15);
+          }
 
-        // Make sure the Brake pedal is opposite to the direction of motion AND it goes to 0 as we reach standstill (to avoid Reverse driving by Brake pedal) 
-        if (speedAvg > 0) {
-          cmd1 = (int16_t)((-cmd1 * speedBlend) >> 15);
-        } else {
-          cmd1 = (int16_t)(( cmd1 * speedBlend) >> 15);          
-        }
+          // Make sure the Brake pedal is opposite to the direction of motion AND it goes to 0 as we reach standstill (to avoid Reverse driving by Brake pedal) 
+          if (speedAvg > 0) {
+            cmd1 = (int16_t)((-cmd1 * speedBlend) >> 15);
+          } else {
+            cmd1 = (int16_t)(( cmd1 * speedBlend) >> 15);          
+          }
+        #endif
       #endif
 
       // ####### LOW-PASS FILTER #######
@@ -244,12 +248,14 @@ int main(void) {
       speed = (int16_t)(speedFixdt >> 16);  // convert fixed-point to integer    
 
       // ####### VARIANT_HOVERCAR #######
-      #ifdef VARIANT_HOVERCAR        
-        if (!MultipleTapBreak.b_multipleTap) {  // Check driving direction
-          speed = steer + speed;                // Forward driving          
-        } else {
-          speed = steer - speed;                // Reverse driving
-        }
+      #ifdef VARIANT_HOVERCAR
+        #if MULTIPLE_TAP_NR != 0
+          if (!MultipleTapBreak.b_multipleTap) {  // Check driving direction
+            speed = steer + speed;                // Forward driving          
+          } else {
+            speed = steer - speed;                // Reverse driving
+          }
+        #endif
       #endif
 
       // ####### MIXER #######
@@ -388,8 +394,10 @@ int main(void) {
     #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
       if (main_loop_counter % 25 == 0) {    // Send data periodically every 125 ms
         #ifdef CONTROL_ADC
-        setScopeChannel(0, (int16_t)adc_buffer.l_tx2);          // 1: ADC1
-        setScopeChannel(1, (int16_t)adc_buffer.l_rx2);          // 2: ADC2
+        //setScopeChannel(0, (int16_t)adc_buffer.l_tx2);          // 1: ADC1
+        //setScopeChannel(1, (int16_t)adc_buffer.l_rx2);          // 2: ADC2
+        setScopeChannel(0, (int16_t)cmd1);          // 1: ADC1
+        setScopeChannel(1, (int16_t)cmd2);          // 2: ADC2
         #endif
         #ifdef CONTROL_PPM
         setScopeChannel(0, ppm_captured_value[0]);              // 1: CH1

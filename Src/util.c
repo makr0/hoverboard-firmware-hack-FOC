@@ -355,7 +355,7 @@ void Input_Init(void) {
 void poweronMelody(void) {
 	for (int i = 8; i >= 5; i--) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(200);
+		HAL_Delay(50);
 	}
 	buzzerFreq = 0;
 }
@@ -560,9 +560,9 @@ void poweroff(void) {
 	buzzerPattern = 0;
 	enable = 0;
 	consoleLog("-- Motors disabled --\r\n");
-	for (int i = 0; i < 5; i++) {
+	for (int i = 4; i < 8; i++) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(50);
+		HAL_Delay(100);
 	}
   saveConfig();
 	HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_RESET);
