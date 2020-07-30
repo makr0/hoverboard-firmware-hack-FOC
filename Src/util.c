@@ -421,7 +421,9 @@ void adcCalibLim(void) {
     uint16_t ADC2_MIN_temp   = 4095;
     uint16_t ADC2_MID_temp   = 0;
     uint16_t ADC2_MAX_temp   = 0;
-    
+    static volatile uint8_t uart_buf[100];
+    int strLength;
+
     adc_cal_valid = 1;
 
     // Extract MIN, MAX and MID from ADC while the power button is not pressed
@@ -436,6 +438,13 @@ void adcCalibLim(void) {
       ADC2_MAX_temp = MAX(ADC2_MAX_temp, ADC2_MID_temp);      
       adc_cal_timeout++;
       HAL_Delay(5);
+      if(adc_cal_timeout % 20 == 0) {
+      strLength = sprintf((char *)(uintptr_t)uart_buf,
+                  "ADC1 [%i - %i] ADC2 [%i - %i] | ttl: %i\r\n",
+                  ADC1_MIN_temp, ADC1_MAX_temp, ADC2_MIN_temp, ADC2_MAX_temp, 2000-adc_cal_timeout);
+
+      consoleLog2(uart_buf,strLength);
+      }
     }
 
     // ADC calibration checks 
@@ -450,7 +459,7 @@ void adcCalibLim(void) {
     #endif
 
     // Add final ADC margin to have exact 0 and MAX at the minimum and maximum ADC value
-    if (adc_cal_valid && (ADC1_MAX_temp - ADC1_MIN_temp) > 500 && (ADC2_MAX_temp - ADC2_MIN_temp) > 500) {
+    if (adc_cal_valid && (ADC1_MAX_temp - ADC1_MIN_temp) > 100 && (ADC2_MAX_temp - ADC2_MIN_temp) > 100) {
       ADC1_MIN_CAL = ADC1_MIN_temp + 150;
       ADC1_MID_CAL = ADC1_MID_temp;
       ADC1_MAX_CAL = ADC1_MAX_temp - 150;    
