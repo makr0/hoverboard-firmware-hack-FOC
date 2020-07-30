@@ -64,6 +64,7 @@ extern int16_t speedAvg;                // Average measured speed
 extern int16_t speedAvgAbs;             // Average measured speed in absolute
 extern uint8_t timeoutFlagADC;          // Timeout Flag for for ADC Protection: 0 = OK, 1 = Problem detected (line disconnected or wrong ADC data)
 extern uint8_t timeoutFlagSerial;       // Timeout Flag for Rx Serial command: 0 = OK, 1 = Problem detected (line disconnected or wrong Rx data)
+extern int16_t curDC_max;
 
 extern volatile int pwml;               // global variable for pwm left. -1000 to 1000
 extern volatile int pwmr;               // global variable for pwm right. -1000 to 1000
@@ -213,6 +214,21 @@ int main(void) {
 
       // ####### VARIANT_HOVERCAR ####### 
       #ifdef VARIANT_HOVERCAR
+        #ifdef BRAKE_MORE
+          // if we are driving forwards and the brake command is > 10
+          // allow more current for braking
+          if(speedAvg > 10 && cmd1 > 10) {
+              rtP_Left.i_max = (I_MOT_MAX_BRAKE * A2BIT_CONV) << 4;        // fixdt(1,16,4)
+              rtP_Right.i_max = rtP_Left.i_max;
+              curDC_max = ((I_MOT_MAX_BRAKE +2) * A2BIT_CONV);
+          } else {
+              rtP_Left.i_max = (I_MOT_MAX * A2BIT_CONV) << 4;        // fixdt(1,16,4)
+              rtP_Right.i_max = rtP_Left.i_max;
+              curDC_max = (I_DC_MAX * A2BIT_CONV);
+
+          }
+        #endif
+
         #if MULTIPLE_TAP_NR == 0
           cmd2 = cmd2 - cmd1;
         #else
