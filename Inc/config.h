@@ -133,7 +133,7 @@
 #define BRAKE_MORE
 #define I_MOT_MAX_BRAKE 18              // [A] Maximum single motor current limit when braking
 #define I_MOT_MAX       12              // [A] Maximum single motor current limit
-#define I_DC_MAX        I_MOT_MAX + 2   // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
+#define I_DC_MAX        (I_MOT_MAX + 2) // [A] Maximum stage2 DC Link current limit for Commutation and Sinusoidal types (This is the final current protection. Above this value, current chopping is applied. To avoid this make sure that I_DC_MAX = I_MOT_MAX + 2A)
 #define N_MOT_MAX       1000            // [rpm] Maximum motor speed limit
 
 // Field Weakening / Phase Advance
