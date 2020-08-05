@@ -102,6 +102,7 @@ int16_t  speedAvg;                      // average measured speed
 int16_t  speedAvgAbs;                   // average measured speed in absolute
 uint8_t  timeoutFlagADC    = 0;         // Timeout Flag for ADC Protection:    0 = OK, 1 = Problem detected (line disconnected or wrong ADC data)
 uint8_t  timeoutFlagSerial = 0;         // Timeout Flag for Rx Serial command: 0 = OK, 1 = Problem detected (line disconnected or wrong Rx data)
+int16_t  board_temp_deg_c;               // board temperature
 
 uint8_t  ctrlModReqRaw = CTRL_MOD_REQ;
 uint8_t  ctrlModReq    = CTRL_MOD_REQ;  // Final control mode request 
@@ -766,28 +767,31 @@ void readCommand(void) {
           }
         }  
       #else
-        if (command.start == SERIAL_START_FRAME && command.checksum == (uint16_t)(command.start ^ command.steer ^ command.speed)) {
-          if (timeoutFlagSerial) {                      // Check for previous timeout flag  
-            if (timeoutCntSerial-- <= 0)                // Timeout de-qualification
-              timeoutFlagSerial = 0;                    // Timeout flag cleared           
+        #ifdef CONTROL_APP_BLUETOOTH
+        #else
+          if (command.start == SERIAL_START_FRAME && command.checksum == (uint16_t)(command.start ^ command.steer ^ command.speed)) {
+            if (timeoutFlagSerial) {                      // Check for previous timeout flag  
+              if (timeoutCntSerial-- <= 0)                // Timeout de-qualification
+                timeoutFlagSerial = 0;                    // Timeout flag cleared           
+            } else {
+              cmd1              = CLAMP((int16_t)command.steer, INPUT_MIN, INPUT_MAX);
+              cmd2              = CLAMP((int16_t)command.speed, INPUT_MIN, INPUT_MAX);
+              command.start     = 0xFFFF;                 // Change the Start Frame for timeout detection in the next cycle
+              timeoutCntSerial  = 0;                      // Reset the timeout counter         
+            }
           } else {
-            cmd1              = CLAMP((int16_t)command.steer, INPUT_MIN, INPUT_MAX);
-            cmd2              = CLAMP((int16_t)command.speed, INPUT_MIN, INPUT_MAX);
-            command.start     = 0xFFFF;                 // Change the Start Frame for timeout detection in the next cycle
-            timeoutCntSerial  = 0;                      // Reset the timeout counter         
+            if (timeoutCntSerial++ >= SERIAL_TIMEOUT) {   // Timeout qualification
+              timeoutFlagSerial = 1;                      // Timeout detected
+              timeoutCntSerial  = SERIAL_TIMEOUT;         // Limit timout counter value
+            }
+            // Most probably we are out-of-sync. Try to re-sync by reseting the DMA
+            if (main_loop_counter % 30 == 0) {
+              HAL_UART_DMAStop(&huart);                
+              HAL_UART_Receive_DMA(&huart, (uint8_t *)&command, sizeof(command));            
+            }
           }
-        } else {
-          if (timeoutCntSerial++ >= SERIAL_TIMEOUT) {   // Timeout qualification
-            timeoutFlagSerial = 1;                      // Timeout detected
-            timeoutCntSerial  = SERIAL_TIMEOUT;         // Limit timout counter value
-          }
-          // Most probably we are out-of-sync. Try to re-sync by reseting the DMA
-          if (main_loop_counter % 30 == 0) {
-            HAL_UART_DMAStop(&huart);                
-            HAL_UART_Receive_DMA(&huart, (uint8_t *)&command, sizeof(command));            
-          }
-        }
         #endif
+      #endif
 
       if (timeoutFlagSerial) {                          // In case of timeout bring the system to a Safe State
         ctrlModReq  = 0;                                // OPEN_MODE request. This will bring the motor power to 0 in a controlled way

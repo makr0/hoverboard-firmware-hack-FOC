@@ -194,7 +194,7 @@ int main(void) {
 
   int32_t board_temp_adcFixdt = adc_buffer.temp << 20;  // Fixed-point filter output initialized with current ADC converted to fixed-point
   int16_t board_temp_adcFilt  = adc_buffer.temp;
-  int16_t board_temp_deg_c;
+  extern int16_t board_temp_deg_c;
 
 
   while(1) {
@@ -433,6 +433,9 @@ int main(void) {
         setScopeChannel(7, (int16_t)board_temp_deg_c);          // 8: for verifying board temperature calibration
         consoleScope();
       }
+    #endif
+    #ifdef CONTROL_APP_BLUETOOTH
+      SendTelemetry();
     #endif
 
     // ####### FEEDBACK SERIAL OUT #######

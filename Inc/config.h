@@ -197,7 +197,7 @@
 
 #ifndef VARIANT_TRANSPOTTER
   //#define DEBUG_SERIAL_SERVOTERM
-  #define DEBUG_SERIAL_ASCII
+  // #define DEBUG_SERIAL_ASCII
 #endif
 // ########################### END OF DEBUG SERIAL ############################
 
@@ -356,7 +356,8 @@
   //#define INVERT_L_DIRECTION           // Invert rotation of left motor
   //#define SIDEBOARD_SERIAL_USART3
   //#define FEEDBACK_SERIAL_USART3        // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
-  #define DEBUG_SERIAL_USART3          // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
+  #define DEBUG_SERIAL_USART3             // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
+  #define CONTROL_APP_BLUETOOTH           // use APP Protocol as input and telemetry protocol (use Keuwlsoft Bluetooth Electronics on android phone)
 #endif
 
 // Multiple tap detection: default DOUBLE Tap on Brake pedal (4 pulses)
