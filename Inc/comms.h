@@ -32,3 +32,8 @@ void consoleLog2(char *message,int strLength);
 
 #endif
 
+
+
+#if defined(CONTROL_APP_BLUETOOTH)
+    void SendTelemetry();
+#endif
