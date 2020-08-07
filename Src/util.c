@@ -442,11 +442,11 @@ void adcCalibLim(void) {
       adc_cal_timeout++;
       HAL_Delay(5);
       if(adc_cal_timeout % 20 == 0) {
-      strLength = sprintf((char *)(uintptr_t)uart_buf,
+      sprintf((char *)(uintptr_t)uart_buf,
                   "ADC1 [%i - %i] ADC2 [%i - %i] | ttl: %i\r\n",
                   ADC1_MIN_temp, ADC1_MAX_temp, ADC2_MIN_temp, ADC2_MAX_temp, 2000-adc_cal_timeout);
 
-      consoleLog2(uart_buf,strLength);
+      consoleLog(uart_buf);
       }
     }
 
@@ -498,12 +498,11 @@ void updateCurSpdLim(void) {
     uint16_t cur_spd_timeout = 0;
     uint16_t cur_factor;    // fixdt(0,16,16)
     uint16_t spd_factor;    // fixdt(0,16,16)
-    int strLength;
     static volatile uint8_t uart_buf[100];
 
 
     // Wait for the power button press
-    while (!HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) && cur_spd_timeout < 100) {  // 10 sec timeout
+    while (!HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) && cur_spd_timeout < 50) {  // 5 sec timeout
       filtLowPass32(adc_buffer.l_tx2, FILTER, &adc1_fixdt);
       filtLowPass32(adc_buffer.l_rx2, FILTER, &adc2_fixdt);
       cur_spd_timeout++;
@@ -519,16 +518,17 @@ void updateCurSpdLim(void) {
     rtP_Left.n_max  = (int16_t)((N_MOT_MAX * spd_factor) >> 12);                 // fixdt(0,16,16) to fixdt(1,16,4)
     rtP_Right.i_max = rtP_Left.i_max;
     rtP_Right.n_max = rtP_Left.n_max;
-    strLength = sprintf((char *)(uintptr_t)uart_buf,
+    sprintf((char *)(uintptr_t)uart_buf,
                 "i_max:%i n_max:%i | ttl: %i\r\n",
-                rtP_Left.i_max, rtP_Left.n_max,100-cur_spd_timeout);
+                rtP_Left.i_max, rtP_Left.n_max,50-cur_spd_timeout);
 
-    consoleLog2(uart_buf,strLength);
+    consoleLog(uart_buf);
 
 }
 
     cur_spd_valid   = 1;
     consoleLog("OK\n");
+    saveConfig();
 
   #endif
 }

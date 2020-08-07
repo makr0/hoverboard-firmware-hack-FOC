@@ -83,23 +83,27 @@ extern ExtY rtY_Left;                   /* External outputs */
 extern ExtY rtY_Right;                  /* External outputs */
 extern int16_t batVoltage;              // global variable for battery voltage
 extern int16_t  speedAvg;               // average speed
+extern volatile adc_buf_t adc_buffer;
 
 void SendTelemetry() {
-    if (telemetryTimer %20 == 0) {  // send Temperature only every 20th time this function is called
+    if (telemetryTimer %200 == 0) {  // send Temperature and voltage calibration 
+                                    // only every 200th time this function is called
       sprintf((char *)(uintptr_t)uart_buf,
+        "*v%i*"
         "*T%i*\n",
+        adc_buffer.batt1,
         (int16_t)board_temp_deg_c / 10 //board temperature
       );
     } else {
       sprintf((char *)(uintptr_t)uart_buf,
         "*V%i**A%i*"
         "*S%i*"
-        "*m%i,%i*\n",
+        "*a%i**b%i*\n",
       (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC), // Battery Voltage
       (ABS(curR_DC) + ABS(curL_DC)) / A2BIT_CONV, // sum of motor currents
       speedAvg,         // average speed
-      rtY_Right.n_mot, // right motor speed
-      rtY_Left.n_mot // left motor speed
+      ABS(rtY_Right.n_mot), // right motor speed
+      ABS(rtY_Left.n_mot) // left motor speed
       );
     }
     consoleLog(uart_buf);
