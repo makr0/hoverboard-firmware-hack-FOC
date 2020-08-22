@@ -115,7 +115,7 @@ void SendTelemetry() {
         "*OR%iG0B0*" // Are we in Overdrive? ( is input > FIELD_WEAK_LO and speed > n_fieldWeakAuthLo) sent as RGB values
         "*E%ld*"  // Ah
         "*d%ld*"  // distance (m)
-        "*W%ld*"  // Wh
+       "*W%ld*"  // Wh
         "*t%ld*"  // current telemetryTimer
         "\n",
 
@@ -135,10 +135,12 @@ void SendTelemetry() {
         "*V%i*" // Battery Voltage
         "*c%i*" // cell voltage
         "*A%i*" // sum of motor currents
+        "*i%i*" // input cmd
         "*S%i*", // average speed
         (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC), 
         (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC) / (BAT_CELLS), 
         (ABS(curR_DC) + ABS(curL_DC)) / A2BIT_CONV, 
+        cmd1,
         speedAvg
       );
     }

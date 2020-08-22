@@ -356,7 +356,7 @@ void Input_Init(void) {
 void poweronMelody(void) {
 	for (int i = 8; i > 4; i--) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(1);
+		HAL_Delay(10);
 	}
 	buzzerFreq = 0;
 }
@@ -364,7 +364,7 @@ void poweronMelody(void) {
 void poweroffMelody(void){
 	for (int i = 4; i < 8; i++) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(1);
+		HAL_Delay(10);
 	}
 	buzzerFreq = 0;
 }
@@ -470,7 +470,7 @@ void adcCalibLim(void) {
     #endif
 
     // Add final ADC margin to have exact 0 and MAX at the minimum and maximum ADC value
-    if (adc_cal_valid && (ADC1_MAX_temp - ADC1_MIN_temp) > 100 && (ADC2_MAX_temp - ADC2_MIN_temp) > 100) {
+    if (adc_cal_valid && (ADC1_MAX_temp - ADC1_MIN_temp) >= 0 && (ADC2_MAX_temp - ADC2_MIN_temp) > 100) {
       ADC1_MIN_CAL = ADC1_MIN_temp + 150;
       ADC1_MID_CAL = ADC1_MID_temp;
       ADC1_MAX_CAL = ADC1_MAX_temp - 150;    
@@ -694,7 +694,8 @@ void readCommand(void) {
               -CLAMP((ADC1_MID_CAL - adc_buffer.l_tx2) * INPUT_MAX / (ADC1_MID_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1 
         cmd1 = addDeadBand(cmd1,CMD1_DEADBAND,INPUT_MIN,INPUT_MAX);       
       #else
-        cmd2 = CLAMP((adc_buffer.l_tx2 - ADC1_MIN_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1
+        //cmd2 = CLAMP((adc_buffer.l_tx2 - ADC1_MIN_CAL) * INPUT_MAX / (ADC1_MAX_CAL - ADC1_MIN_CAL), 0, INPUT_MAX);    // ADC1
+        cmd2=0;
       #endif
       
 
@@ -703,7 +704,7 @@ void readCommand(void) {
               -CLAMP((ADC2_MID_CAL - adc_buffer.l_rx2) * INPUT_MAX / (ADC2_MID_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2        
         cmd2 = addDeadBand(cmd2,CMD2_DEADBAND,INPUT_MIN,INPUT_MAX);       
       #else
-        cmd1 = CLAMP((adc_buffer.l_rx2 - ADC2_MIN_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2
+        cmd1 =  CLAMP((adc_buffer.l_rx2 - ADC2_MIN_CAL) * INPUT_MAX / (ADC2_MAX_CAL - ADC2_MIN_CAL), 0, INPUT_MAX);    // ADC2
       #endif
 
       #ifdef ADC_PROTECT_ENA
