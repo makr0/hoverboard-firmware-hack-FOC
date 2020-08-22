@@ -26,6 +26,7 @@
 #include "setup.h"
 #include "config.h"
 #include "util.h"
+#include "control.h"
 #include "energy.h"
 #include "comms.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
@@ -78,6 +79,8 @@ extern uint8_t enable;                  // global variable for motor enable
 
 extern volatile uint32_t timeout;       // global variable for timeout
 extern int16_t batVoltage;              // global variable for battery voltage
+extern uint8_t BAT_CELLS;       // battery number of cells. Normal Hoverboard battery: 10s
+
 
 #if defined(SIDEBOARD_SERIAL_USART2)
 extern SerialSideboard Sideboard_L;
@@ -438,8 +441,9 @@ int main(void) {
     #endif
     #ifdef CONTROL_APP_BLUETOOTH
       Energycounters_Step();
-      if (main_loop_counter % 2 == 0) {    // Send data periodically every 10 ms
+      if (main_loop_counter % 4 == 0) {    // Send data periodically every 20 ms
         SendTelemetry();
+        AppExecuteCommand();
       }
     #endif
 

@@ -67,7 +67,6 @@
 #define BAT_FILT_COEF           8000 //655       // battery voltage filter coefficient in fixed-point. coef_fixedPoint = coef_floatingPoint * 2^16. In this case 655 = 0.01 * 2^16
 #define BAT_CALIB_REAL_VOLTAGE  4110      // input voltage measured by multimeter (multiplied by 100). In this case 43.00 V * 100 = 4300
 #define BAT_CALIB_ADC           1619      // adc-value measured by mainboard (value nr 5 on UART debug output)
-#define BAT_CELLS               10        // battery number of cells. Normal Hoverboard battery: 10s
 #define BAT_LVL2_ENABLE         0         // to beep or not to beep, 1 or 0
 #define BAT_LVL1_ENABLE         1         // to beep or not to beep, 1 or 0
 #define BAT_BLINK_INTERVAL      80        // battery led blink interval (80 loops * 5ms ~= 400ms)
@@ -151,7 +150,7 @@
 // Default settings will be applied at the end of this config file if not set before
 #define INACTIVITY_TIMEOUT      	8       // Minutes of not driving until poweroff. it is not very precise.
 #define BEEPS_BACKWARD          	0       // 0 or 1
-#define FLASH_WRITE_KEY           0x0001  // Flash writing key, used when writing data to flash memory
+#define FLASH_WRITE_KEY           0x1234  // Flash writing key, used when writing data to flash memory
 //#define SUPPORT_BUTTONS							  // Define for buttons support on ADC, Nunchuck
 
 /* FILTER is in fixdt(0,16,16): VAL_fixedPoint = VAL_floatingPoint * 2^16. In this case 6553 = 0.1 * 2^16
@@ -353,8 +352,8 @@
   #define ADC2_MAX            2200      // max ADC2-value while poti at maximum-position (0 - 4095)
   #define SPEED_COEFFICIENT   16384     //  1.0f
   #define STEER_COEFFICIENT   0         //  0.0f
-  //#define INVERT_R_DIRECTION           // Invert rotation of right motor
-  //#define INVERT_L_DIRECTION           // Invert rotation of left motor
+  #define INVERT_R_DIRECTION           // Invert rotation of right motor
+  #define INVERT_L_DIRECTION           // Invert rotation of left motor
   //#define SIDEBOARD_SERIAL_USART3
   //#define FEEDBACK_SERIAL_USART3        // right sensor board cable, disable if I2C (nunchuk or lcd) is used!
   #define DEBUG_SERIAL_USART3             // right sensor board cable, disable if I2C (nunchuk or lcd) is used!

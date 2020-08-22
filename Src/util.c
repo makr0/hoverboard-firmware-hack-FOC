@@ -354,9 +354,9 @@ void Input_Init(void) {
 /* =========================== General Functions =========================== */
 
 void poweronMelody(void) {
-	for (int i = 8; i >= 4; i--) {
+	for (int i = 8; i > 4; i--) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(15);
+		HAL_Delay(1);
 	}
 	buzzerFreq = 0;
 }
@@ -364,7 +364,7 @@ void poweronMelody(void) {
 void poweroffMelody(void){
 	for (int i = 4; i < 8; i++) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(15);
+		HAL_Delay(1);
 	}
 	buzzerFreq = 0;
 }
