@@ -6,6 +6,7 @@
 #include "config.h"
 #include "comms.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
+#include "energy.h"
 
 
 extern UART_HandleTypeDef huart2;
@@ -64,7 +65,7 @@ void consoleLog(char *message)
 }
 void consoleLog2(char *message, int strlength)
 {
-  #if defined DEBUG_SERIAL_ASCII && (defined DEBUG_SERIAL_USART2 || defined DEBUG_SERIAL_USART3)
+  #if (defined DEBUG_SERIAL_ASCII || defined CONTROL_APP_BLUETOOTH) && (defined DEBUG_SERIAL_USART2 || defined DEBUG_SERIAL_USART3)
     if(UART_DMA_CHANNEL_TX->CNDTR == 0) {
       UART_DMA_CHANNEL_TX->CCR  &= ~DMA_CCR_EN;
       UART_DMA_CHANNEL_TX->CNDTR = strlength;
@@ -81,25 +82,64 @@ extern int16_t board_temp_deg_c;
 extern int16_t curR_DC, curL_DC;
 extern ExtY rtY_Left;                   /* External outputs */
 extern ExtY rtY_Right;                  /* External outputs */
+extern DW   rtDW_Left;                  /* Observable states */
+
+extern P    rtP_Left;                   /* Block parameters (auto storage) */
+extern P    rtP_Right;                  /* Block parameters (auto storage) */
+extern ExtU rtU_Left;                   /* External inputs */
+extern ExtU rtU_Right;                  /* External inputs */
+
 extern int16_t batVoltage;              // global variable for battery voltage
 extern int16_t  speedAvg;               // average speed
+extern volatile adc_buf_t adc_buffer;
+extern int16_t cmd1;                    // brake input
+extern int16_t cmd2;                    // speed input
+extern EnergyCounters_struct EnergyCounters;
+extern uint8_t BAT_CELLS;
 
 void SendTelemetry() {
-    if (telemetryTimer %20 == 0) {  // send Temperature only every 20th time this function is called
+    if (telemetryTimer %200 == 0) {  // send Temperature and voltage calibration 
+                                    // only every 200th time this function is called
       sprintf((char *)(uintptr_t)uart_buf,
-        "*T%i*\n",
-        (int16_t)board_temp_deg_c / 10 //board temperature
+        "*v%i*"  // for voltage calibration
+        "*T%i*" // board Temperature
+        "*M%i*" // Control Type 0 = Commutation , 1 = Sinusoidal, 2 = FOC
+        "*m%i*\n", // control mode 0 = Open, 1 = VOLTAGE, 2 = SPEED, 3 = TORQUE
+        adc_buffer.batt1,
+        (int16_t)board_temp_deg_c / 10, //board temperature
+        rtP_Right.z_ctrlTypSel,         // control type
+        rtU_Right.z_ctrlModReq          // control mode
       );
-    } else {
+    } else if(telemetryTimer%2 == 0) { // these values are sent every second time
       sprintf((char *)(uintptr_t)uart_buf,
-        "*V%i**A%i*"
-        "*S%i*"
-        "*m%i,%i*\n",
-      (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC), // Battery Voltage
-      (ABS(curR_DC) + ABS(curL_DC)) / A2BIT_CONV, // sum of motor currents
-      speedAvg,         // average speed
-      rtY_Right.n_mot, // right motor speed
-      rtY_Left.n_mot // left motor speed
+        "*OR%iG0B0*" // Are we in Overdrive? ( is input > FIELD_WEAK_LO and speed > n_fieldWeakAuthLo) sent as RGB values
+        "*E%ld*"  // Ah
+        "*d%ld*"  // distance (m)
+        "*W%ld*"  // Wh
+        "*t%ld*"  // current telemetryTimer
+        "\n",
+
+        (
+          rtP_Right.b_fieldWeakEna && 
+          cmd2 > FIELD_WEAK_LO && (    ABS(rtY_Right.n_mot) > (rtP_Right.n_fieldWeakAuthLo >> 4)
+                                    || ABS(rtY_Left.n_mot)  > (rtP_Left.n_fieldWeakAuthLo  >> 4) 
+                                  )
+        )  << 8 ,
+        (uint32_t)(EnergyCounters.Ah * 1000.0),
+        (uint32_t)(EnergyCounters.distance / (float)1000.0),
+        (uint32_t)(EnergyCounters.Wh * 1.0),
+        telemetryTimer
+      );
+    } else{
+      sprintf((char *)(uintptr_t)uart_buf,
+        "*V%i*" // Battery Voltage
+        "*c%i*" // cell voltage
+        "*A%i*" // sum of motor currents
+        "*S%i*", // average speed
+        (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC), 
+        (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC) / (BAT_CELLS), 
+        (ABS(curR_DC) + ABS(curL_DC)) / A2BIT_CONV, 
+        speedAvg
       );
     }
     consoleLog(uart_buf);

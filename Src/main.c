@@ -26,6 +26,8 @@
 #include "setup.h"
 #include "config.h"
 #include "util.h"
+#include "control.h"
+#include "energy.h"
 #include "comms.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
 #include "rtwtypes.h"
@@ -77,6 +79,8 @@ extern uint8_t enable;                  // global variable for motor enable
 
 extern volatile uint32_t timeout;       // global variable for timeout
 extern int16_t batVoltage;              // global variable for battery voltage
+extern uint8_t BAT_CELLS;       // battery number of cells. Normal Hoverboard battery: 10s
+
 
 #if defined(SIDEBOARD_SERIAL_USART2)
 extern SerialSideboard Sideboard_L;
@@ -180,6 +184,7 @@ int main(void) {
   Input_Lim_Init();   // Input Limitations Init
   Input_Init();       // Input Init
   motor_i_max_from_eeprom = rtP_Left.i_max;
+  Energycounters_Init(1000 / (DELAY_IN_MAIN_LOOP + 1) );
 
   HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_SET);
 
@@ -409,9 +414,9 @@ int main(void) {
     board_temp_deg_c    = (TEMP_CAL_HIGH_DEG_C - TEMP_CAL_LOW_DEG_C) * (board_temp_adcFilt - TEMP_CAL_LOW_ADC) / (TEMP_CAL_HIGH_ADC - TEMP_CAL_LOW_ADC) + TEMP_CAL_LOW_DEG_C;
 
     // ####### DEBUG SERIAL OUT #######
-    #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
+    #if (defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)) && !defined(CONTROL_APP_BLUETOOTH)
       if (main_loop_counter % 25 == 0) {    // Send data periodically every 125 ms
-        #ifdef CONTROL_ADC
+        #if defined(CONTROL_ADC) 
         //setScopeChannel(0, (int16_t)adc_buffer.l_tx2);          // 1: ADC1
         //setScopeChannel(1, (int16_t)adc_buffer.l_rx2);          // 2: ADC2
         setScopeChannel(0, (int16_t)cmd1);          // 1: ADC1
@@ -435,7 +440,11 @@ int main(void) {
       }
     #endif
     #ifdef CONTROL_APP_BLUETOOTH
-      SendTelemetry();
+      Energycounters_Step();
+      if (main_loop_counter % 4 == 0) {    // Send data periodically every 20 ms
+        SendTelemetry();
+        AppExecuteCommand();
+      }
     #endif
 
     // ####### FEEDBACK SERIAL OUT #######
