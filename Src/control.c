@@ -5,6 +5,11 @@
 #include "defines.h"
 #include "setup.h"
 #include "config.h"
+#include "comms.h"
+#include "control.h"
+#include "stm32f1xx_ll_dma.h"
+#include "BLDC_controller.h"      /* BLDC's header file */
+
 
 TIM_HandleTypeDef TimHandle;
 TIM_HandleTypeDef TimHandle2;
@@ -18,6 +23,11 @@ uint8_t i2cBuffer[2];
 extern I2C_HandleTypeDef hi2c2;
 extern DMA_HandleTypeDef hdma_i2c2_rx;
 extern DMA_HandleTypeDef hdma_i2c2_tx;
+
+extern volatile uint8_t usart_rx_dma_buffer[255];
+extern UART_HandleTypeDef huart3;
+uint8_t new_command_available;
+extern uint8_t BAT_CELLS;
 
 #ifdef CONTROL_PPM
 uint16_t ppm_captured_value[PPM_NUM_CHANNELS + 1] = {500, 500};
@@ -235,4 +245,152 @@ void Nunchuk_Read(void) {
   //setScopeChannel(1, (int)nunchuk_data[1]);
   //setScopeChannel(2, (int)nunchuk_data[5] & 1);
   //setScopeChannel(3, ((int)nunchuk_data[5] >> 1) & 1);
+}
+
+#if defined(CONTROL_APP_BLUETOOTH)
+extern ExtY rtY_Left;                   /* External outputs */
+extern ExtY rtY_Right;                  /* External outputs */
+
+extern P    rtP_Left;                   /* Parameters for left motor */
+extern P    rtP_Right;                  /* right motor */
+extern ExtU rtU_Left;                   /* External inputs */
+extern ExtU rtU_Right;                   /* External inputs */
+extern uint8_t  ctrlModReq;             // global variable for control mode request 
+
+
+ void USART3_IRQHandler(void) {
+    /* Check for IDLE line interrupt */
+    if (READ_BIT(USART3->CR1, USART_CR1_IDLEIE) == (USART_CR1_IDLEIE) &&  READ_BIT(USART3->SR, USART_SR_IDLE) == (USART_SR_IDLE))
+    {
+        /* Clear IDLE line flag */
+        __IO uint32_t tmpreg;
+        tmpreg = USART3->SR;
+        (void) tmpreg;
+        tmpreg = USART3->DR;
+        (void) tmpreg;
+        app_rx_process_data();                       /* Check for data to process */
+    }
+}
+#endif
+
+void app_rx_process_data() {
+  int len;
+
+  len = sizeof(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_3);
+  usart_rx_dma_buffer[len-1]=0;
+  HAL_UART_DMAStop(&huart3);
+  HAL_UART_Receive_DMA(&huart3, (uint8_t *)&usart_rx_dma_buffer, sizeof(usart_rx_dma_buffer));   
+  new_command_available=1;
+}
+/**
+ * interpret command and execute
+ * there are 2 types of command: query and execute
+ * query commands start with '?'
+ * execute commands start with '!'
+ * all commands end with '.'
+ * 
+ * Setup/Tuning Commands, sent once per value change
+ * 
+ * PID commands. each component (P,I,D) can be omitted. Values are stored as integer
+ * !speedP1234.!speedI42.!speedD23. set speedPID to P=1234 I=42 D=23
+ * 
+ * simple values. are stored as integers
+ * !maxcN20.                set max overall current to 20A (10A per motor)
+ * !cellN10.                set number of Cells to 10 (equals BAT_NUMBER_OF_CELLS on startup)
+ * !ctrlT2.                 set control type to 'FOC'. equivalent to #define CTRL_TYP_SEL in config.h
+ *                          Control type selection: 0 = Commutation ,
+ *                                                  1 = Sinusoidal,
+ *                                                  2 = FOC Field Oriented Control
+ * 
+ * !ctrlM3.                 set control mode to TORQUE. equivalent to #define CTRL_MOD_REQ  
+ *                          Control mode request: 0 = Open mode
+ *                                                1 = VOLTAGE mode
+ *                                                2 = SPEED mode
+ *                                                3 = TORQUE mode.
+ *                                              SPEED and TORQUE modes are only available for FOC!
+ * motor model parameters
+ * !maxRPM600.              set max RPM for both motors to 600
+ * 
+ */
+
+void AppExecuteCommand() {
+  if(!new_command_available) return;
+
+
+  if(strStartsWith("!maxRPM", usart_rx_dma_buffer)) {
+    int16_t rpm = atoi(usart_rx_dma_buffer+strlen("!maxRPM"));
+    if(rpm > 0 && rpm <= 1000) {
+      rtP_Right.n_max = rpm << 4; // fixdt(1,16,4)
+      rtP_Left.n_max = rtP_Right.n_max; // fixdt(1,16,4)
+    }
+    sendNewValue("*R%i*",rpm);
+  }
+
+  if(strStartsWith("!fieldWstart", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!fieldWstart"));
+    if(value >= 100 && value < (rtP_Right.n_fieldWeakAuthHi >> 4)) {
+      rtP_Right.n_fieldWeakAuthLo = value << 4; // fixdt(1,16,4)
+      rtP_Left.n_fieldWeakAuthLo = rtP_Right.n_fieldWeakAuthLo; // fixdt(1,16,4)
+    }
+    sendNewValue("*f%i*",rtP_Right.n_fieldWeakAuthLo >> 4);
+  }
+  if(strStartsWith("!fieldWend", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!fieldWend"));
+    if(value > (rtP_Right.n_fieldWeakAuthLo >> 4) && value < 1000) {
+      rtP_Right.n_fieldWeakAuthHi = value << 4; // fixdt(1,16,4)
+      rtP_Left.n_fieldWeakAuthHi = rtP_Right.n_fieldWeakAuthHi; // fixdt(1,16,4)
+    }
+    sendNewValue("*F%i*",rtP_Right.n_fieldWeakAuthHi >> 4);
+  }
+  if(strStartsWith("!fieldWenable", usart_rx_dma_buffer)) {
+      rtP_Right.b_fieldWeakEna = 1;
+      rtP_Left.b_fieldWeakEna = 1;
+  }
+  if(strStartsWith("!fieldWdisable", usart_rx_dma_buffer)) {
+      rtP_Right.b_fieldWeakEna = 0;
+      rtP_Left.b_fieldWeakEna = 0;
+  }
+  if(strStartsWith("!numcells", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!numcells"));
+    if(value >= 10 && value <= 15) {
+      BAT_CELLS = value;
+    }
+    sendNewValue("*B%i*",BAT_CELLS);
+  }
+  if(strStartsWith("!numcells", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!numcells"));
+    if(value >= 10 && value <= 15) {
+      BAT_CELLS = value;
+    }
+    sendNewValue("*B%i*",BAT_CELLS);
+  }
+  if(strStartsWith("!ctrlT", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!ctrlT"));
+    if(value >= 0 && value <= 2) {
+      rtP_Right.z_ctrlTypSel = value;
+      rtP_Left.z_ctrlTypSel = value;
+      sendNewValue("*M%i*",value);
+    }
+  }
+  if(strStartsWith("!ctrlM", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!ctrlM"));
+    if(value >= 0 && value <= 3) {
+      ctrlModReq= value;
+      sendNewValue("*m%i*",value);
+    }
+  }
+
+  new_command_available=0;
+}
+
+void sendNewValue(char *format, int16_t value) {
+  static volatile uint8_t uart_buf[255];
+  sprintf((char *)(uintptr_t)uart_buf, format, value);
+  HAL_Delay(200);
+  consoleLog(uart_buf);
+}
+
+int strStartsWith(char *pre, char *str)
+{
+    return strncmp(pre, str, strlen(pre)) == 0;
 }

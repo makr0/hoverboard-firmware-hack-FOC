@@ -52,6 +52,8 @@ DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
 volatile adc_buf_t adc_buffer;
 
+volatile uint8_t usart_rx_dma_buffer[255];
+
 
 #if defined(CONTROL_SERIAL_USART2) || defined(SIDEBOARD_SERIAL_USART2) || \
     defined(FEEDBACK_SERIAL_USAR2) || defined(DEBUG_SERIAL_USART2)
@@ -169,7 +171,8 @@ void UART3_Init(void) {
   huart3.Init.Parity          = UART_PARITY_NONE;
   huart3.Init.HwFlowCtl       = UART_HWCONTROL_NONE;
   huart3.Init.OverSampling    = UART_OVERSAMPLING_16;
-  #if defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+
+  #if defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(CONTROL_APP_BLUETOOTH)
     huart3.Init.Mode          = UART_MODE_TX_RX;
   #elif defined(DEBUG_SERIAL_USART3)
     huart3.Init.Mode          = UART_MODE_TX;
@@ -187,7 +190,7 @@ void UART3_Init(void) {
   GPIO_InitStruct.Speed       = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  #if defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+  #if defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3) || defined(CONTROL_APP_BLUETOOTH)
     GPIO_InitStruct.Pin       = GPIO_PIN_11;
     GPIO_InitStruct.Mode      = GPIO_MODE_INPUT;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -203,6 +206,13 @@ void UART3_Init(void) {
     hdma_usart3_rx.Init.Priority              = DMA_PRIORITY_LOW;
     HAL_DMA_Init(&hdma_usart3_rx);
     __HAL_LINKDMA(&huart3, hdmarx, hdma_usart3_rx);
+    #if defined(CONTROL_APP_BLUETOOTH)
+      /* for idle line detection */
+      SET_BIT(USART3->CR1, USART_CR1_IDLEIE);
+      HAL_NVIC_SetPriority(USART3_IRQn, 5,3);
+      HAL_NVIC_EnableIRQ(USART3_IRQn);
+      HAL_UART_Receive_DMA(&huart3, (uint8_t *)&usart_rx_dma_buffer, sizeof(usart_rx_dma_buffer));  
+    #endif
   #endif
 
   hdma_usart3_tx.Instance                     = DMA1_Channel2;
@@ -225,6 +235,7 @@ void UART3_Init(void) {
   #endif  
 }
 #endif
+
 
 DMA_HandleTypeDef hdma_i2c2_rx;
 DMA_HandleTypeDef hdma_i2c2_tx;

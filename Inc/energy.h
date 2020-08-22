@@ -31,7 +31,7 @@ typedef struct{
   uint32_t  distance;     // distance driven (mm) 32bit is long enough for 4000km
   float i_Ah;          // for integration of current
   uint32_t i_nmot;        // for integration of distance
-  uint16_t wheel_circumfence // in mm
+  uint16_t wheel_circumfence; // in mm
   
 } EnergyCounters_struct;
 
