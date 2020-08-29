@@ -50,6 +50,7 @@ extern I2C_HandleTypeDef hi2c2;
 
 extern int16_t batVoltage;
 extern uint8_t backwardDrive;
+extern uint8_t drivingDirectionIsForward; 
 extern uint8_t buzzerFreq;              // global variable for the buzzer pitch. can be 1, 2, 3, 4, 5, 6, 7...
 extern uint8_t buzzerPattern;           // global variable for the buzzer pattern. can be 1, 2, 3, 4, 5, 6, 7...
 
@@ -354,17 +355,18 @@ void Input_Init(void) {
 /* =========================== General Functions =========================== */
 
 void poweronMelody(void) {
-	for (int i = 8; i > 4; i--) {
+	for (int i = 8; i > 1; i--) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(10);
+		HAL_Delay(50);
 	}
 	buzzerFreq = 0;
+  HAL_Delay(500);
 }
 
 void poweroffMelody(void){
-	for (int i = 4; i < 8; i++) {
+	for (int i = 1; i < 8; i++) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(10);
+		HAL_Delay(50);
 	}
 	buzzerFreq = 0;
 }
@@ -470,10 +472,10 @@ void adcCalibLim(void) {
     #endif
 
     // Add final ADC margin to have exact 0 and MAX at the minimum and maximum ADC value
-    if (adc_cal_valid && (ADC1_MAX_temp - ADC1_MIN_temp) >= 0 && (ADC2_MAX_temp - ADC2_MIN_temp) > 100) {
-      ADC1_MIN_CAL = ADC1_MIN_temp + 150;
-      ADC1_MID_CAL = ADC1_MID_temp;
-      ADC1_MAX_CAL = ADC1_MAX_temp - 150;    
+    if (adc_cal_valid && /* (ADC1_MAX_temp - ADC1_MIN_temp) >= 0 && */ (ADC2_MAX_temp - ADC2_MIN_temp) > 100) {
+      //ADC1_MIN_CAL = ADC1_MIN_temp + 150;
+      //ADC1_MID_CAL = ADC1_MID_temp;
+      //ADC1_MAX_CAL = ADC1_MAX_temp - 150;    
       ADC2_MIN_CAL = ADC2_MIN_temp + 150;
       ADC2_MID_CAL = ADC2_MID_temp;
       ADC2_MAX_CAL = ADC2_MAX_temp - 150;      
@@ -482,6 +484,7 @@ void adcCalibLim(void) {
       adc_cal_valid = 0;
       consoleLog("FAIL (Pots travel too short)\n");
     }
+    HAL_Delay(500);
 
   #endif
 }
@@ -579,9 +582,13 @@ void poweroff(void) {
 	enable = 0;
 	consoleLog("-- Motors disabled --\r\n");
   poweroffMelody();
-  saveConfig();
+  //saveConfig();
 	HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_RESET);
 	while(1) {}
+}
+
+void switchDrivingDirection() {
+  drivingDirectionIsForward = !drivingDirectionIsForward;
 }
 
 
@@ -592,27 +599,25 @@ void poweroffPressCheck(void) {
         uint16_t cnt_press = 0;
         while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
           HAL_Delay(10);
-          if (cnt_press++ == 5 * 100) {
-            shortBeep(5); 
-            consoleLog("Double press: Adjust Max Current, Max Speed");                         
-            consoleLog("release to update ADC limits");                
+          if (cnt_press++ == 2 * 100) {
+            shortBeep(2); 
+            consoleLog("Double press: update ADC limits");                         
+            consoleLog("release to power off");                
           }          
         }
         if (cnt_press >= 2 * 100) {// Check if press is more than 2 sec
           HAL_Delay(500);        
-          if (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {  // Double press: Adjust Max Current, Max Speed
+          if (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {  // Double press: Calibrate ADC Limits
             while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { HAL_Delay(10); }  
-            longBeep(8);
-            updateCurSpdLim();
-            shortBeep(5);
-          } else {                                          // Long press: Calibrate ADC Limits
             longBeep(2);
             HAL_Delay(200); 
             adcCalibLim();
             shortBeep(5);
+          } else {                                          // Long press: Power off 
+            poweroff();
           }
-        } else {                                            // Short press: power off
-          poweroff();
+        } else {  
+          switchDrivingDirection();                                          // Short press: reverse driving direction
         }
       }
     #elif defined(VARIANT_TRANSPOTTER)

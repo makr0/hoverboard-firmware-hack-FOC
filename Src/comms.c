@@ -92,8 +92,8 @@ extern ExtU rtU_Right;                  /* External inputs */
 extern int16_t batVoltage;              // global variable for battery voltage
 extern int16_t  speedAvg;               // average speed
 extern volatile adc_buf_t adc_buffer;
-extern int16_t cmd1;                    // brake input
-extern int16_t cmd2;                    // speed input
+extern int16_t cmd1;                    // speed input
+extern int16_t cmd2;                    // brake input
 extern EnergyCounters_struct EnergyCounters;
 extern uint8_t BAT_CELLS;
 
@@ -115,7 +115,7 @@ void SendTelemetry() {
         "*OR%iG0B0*" // Are we in Overdrive? ( is input > FIELD_WEAK_LO and speed > n_fieldWeakAuthLo) sent as RGB values
         "*E%ld*"  // Ah
         "*d%ld*"  // distance (m)
-       "*W%ld*"  // Wh
+        "*W%ld*"  // Wh
         "*t%ld*"  // current telemetryTimer
         "\n",
 
@@ -136,10 +136,12 @@ void SendTelemetry() {
         "*c%i*" // cell voltage
         "*A%i*" // sum of motor currents
         "*i%i*" // input cmd
+        "*I%i" // cmd1
         "*S%i*", // average speed
         (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC), 
         (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC) / (BAT_CELLS), 
         (ABS(curR_DC) + ABS(curL_DC)) / A2BIT_CONV, 
+        adc_buffer.l_rx2,
         cmd1,
         speedAvg
       );
