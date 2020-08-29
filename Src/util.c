@@ -279,6 +279,7 @@ void Input_Init(void) {
     EE_Init();            /* EEPROM Init */    
     EE_ReadVariable(VirtAddVarTab[0], &writeCheck);
     if (writeCheck == FLASH_WRITE_KEY) {
+      consoleLog("read from eeprom");HAL_Delay(100);
       EE_ReadVariable(VirtAddVarTab[1], &ADC1_MIN_CAL);
       EE_ReadVariable(VirtAddVarTab[2], &ADC1_MAX_CAL);
       EE_ReadVariable(VirtAddVarTab[3], &ADC1_MID_CAL);
@@ -293,6 +294,12 @@ void Input_Init(void) {
       rtP_Left.n_max  = n_max;
       rtP_Right.i_max = i_max;
       rtP_Right.n_max = n_max;
+    } else {
+        static volatile uint8_t uart_buf[255];
+      sprintf((char *)(uintptr_t)uart_buf, "Flash write key was %i",writeCheck);
+      HAL_Delay(200);
+      consoleLog(uart_buf);
+
     }
     HAL_FLASH_Lock();
 
@@ -541,6 +548,8 @@ void updateCurSpdLim(void) {
   #endif
 }
 
+uint16_t eeprom_retry = 0;
+
  /*
  * Save Configuration to Flash
  * This function makes sure data is not lost after power-off
@@ -555,6 +564,7 @@ void saveConfig() {
   #endif
   #ifdef CONTROL_ADC
     if (adc_cal_valid || cur_spd_valid) {
+      consoleLog("Save to eeprom\n");
       HAL_FLASH_Unlock();
       EE_WriteVariable(VirtAddVarTab[0], FLASH_WRITE_KEY);
       EE_WriteVariable(VirtAddVarTab[1], ADC1_MIN_CAL);
@@ -566,7 +576,24 @@ void saveConfig() {
       EE_WriteVariable(VirtAddVarTab[7], rtP_Left.i_max);
       EE_WriteVariable(VirtAddVarTab[8], rtP_Left.n_max);
       HAL_FLASH_Lock();
+      HAL_Delay(500);
+      HAL_FLASH_Unlock();
+      uint16_t writeCheck;
+      EE_ReadVariable(VirtAddVarTab[0], &writeCheck);
+      HAL_FLASH_Lock();
+      if (writeCheck == FLASH_WRITE_KEY) {
+        consoleLog("write to eeprom was successful\n");
+        eeprom_retry = 0;
+      } else {
+        consoleLog("write to eeprom was not successful\n");
+        HAL_Delay(100);
+        if(eeprom_retry++ < 10) saveConfig();
+      }
+    } else {
+      consoleLog("will not save to eeprom!\n");
     }
+     HAL_Delay(500);
+
   #endif 
 }
 
@@ -860,7 +887,7 @@ void readCommand(void) {
     #endif
 
     #ifdef VARIANT_HOVERCAR      
-        brakePressed = (uint8_t)(cmd1 > 50);
+        brakePressed = (uint8_t)(cmd2 > 50);
     #endif
 
     #ifdef VARIANT_TRANSPOTTER
