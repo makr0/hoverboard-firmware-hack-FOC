@@ -210,6 +210,8 @@ void BLDC_Init(void) {
   rtP_Left.a_phaAdvMax          = PHASE_ADV_MAX << 4;                   // fixdt(1,16,4)
   rtP_Left.r_fieldWeakHi        = FIELD_WEAK_HI << 4;                   // fixdt(1,16,4)
   rtP_Left.r_fieldWeakLo        = FIELD_WEAK_LO << 4;                   // fixdt(1,16,4)
+  rtP_Right.n_fieldWeakAuthLo   = 500;
+  rtP_Right.n_fieldWeakAuthHi   = 550;
 
   rtP_Right                     = rtP_Left;     // Copy the Left motor parameters to the Right motor parameters
   rtP_Right.b_selPhaABCurrMeas  = 0;            // Right motor measured current phases {Blue, Yellow} = {iB, iC} -> do NOT change
@@ -622,18 +624,18 @@ void switchDrivingDirection() {
 void poweroffPressCheck(void) {
 	#if defined(CONTROL_ADC)
       if(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
-        enable = 0;
+        //enable = 0;
         uint16_t cnt_press = 0;
         while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
           HAL_Delay(10);
-          if (cnt_press++ == 2 * 100) {
+          if (cnt_press++ == 75) {
             shortBeep(2); 
             consoleLog("Double press: update ADC limits");                         
             consoleLog("release to power off");                
           }          
         }
-        if (cnt_press >= 2 * 100) {// Check if press is more than 2 sec
-          HAL_Delay(500);        
+        if (cnt_press >= 75) {// Check if press is more than 2 sec
+          HAL_Delay(50);        
           if (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {  // Double press: Calibrate ADC Limits
             while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { HAL_Delay(10); }  
             longBeep(2);
