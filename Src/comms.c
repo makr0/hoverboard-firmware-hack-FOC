@@ -98,17 +98,21 @@ extern EnergyCounters_struct EnergyCounters;
 extern uint8_t BAT_CELLS;
 
 void SendTelemetry() {
-    if (telemetryTimer %200 == 0) {  // send Temperature and voltage calibration 
+    if (telemetryTimer %100 == 0) {  // send Temperature and voltage calibration 
                                     // only every 200th time this function is called
       sprintf((char *)(uintptr_t)uart_buf,
         "*v%i*"  // for voltage calibration
         "*T%i*" // board Temperature
         "*M%i*" // Control Type 0 = Commutation , 1 = Sinusoidal, 2 = FOC
-        "*m%i*\n", // control mode 0 = Open, 1 = VOLTAGE, 2 = SPEED, 3 = TORQUE
+        "*m%i*"
+        "*P%i"
+        "*I%i", // control mode 0 = Open, 1 = VOLTAGE, 2 = SPEED, 3 = TORQUE
         adc_buffer.batt1,
         (int16_t)board_temp_deg_c / 10, //board temperature
         rtP_Right.z_ctrlTypSel,         // control type
-        rtU_Right.z_ctrlModReq          // control mode
+        rtU_Right.z_ctrlModReq,          // control mode
+        rtP_Left.cf_nKp,               // speed PID-controller P value  
+        rtP_Left.cf_nKi                // speed PID-controller I value  
       );
     } else if(telemetryTimer%2 == 0) { // these values are sent every second time
       sprintf((char *)(uintptr_t)uart_buf,
