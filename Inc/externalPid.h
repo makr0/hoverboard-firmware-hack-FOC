@@ -22,20 +22,19 @@
 #define EXTERNALPID_H
 
 #include <stdint.h>
-#include <FastPID.h>
 
 typedef struct{
   float P; // 
-  float I;
   float D;  
+  float I;
 } ExternalPid_struct;
 
 // Initialization Functions
-void ExternalPid_Init(ExternalPid_struct parameters);
+void ExternalPid_Init();
 void ExternalPid_setCoefficients(ExternalPid_struct parameters);
 
 // Controller step
-void ExternalPID_Step(int16_t setpoint, int16_t feedback, uint32_t timestamp);
+uint16_t ExternalPID_Step(int16_t setpoint, int16_t feedback);
 
 #endif
 

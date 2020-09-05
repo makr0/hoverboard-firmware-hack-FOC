@@ -20,9 +20,13 @@
 // Includes
 #include <stdlib.h> // for abs()
 #include "defines.h"
-#include "externalPid.h"
+
 #include "config.h"
+#include "control.h"
 #include "BLDC_controller.h"           /* Model's header file */
+#include "FastPID.h"
+#include "externalPid.h"
+
 
 ExternalPid_struct ExternalPid_coefficients;
 extern int16_t curR_DC, curL_DC;
@@ -31,15 +35,21 @@ extern DW   rtDW_Right;                 /* Observable states */
 extern ExtY rtY_Left;                   /* External outputs */
 extern ExtY rtY_Right;                  /* External outputs */
 extern int16_t batVoltage;              // global variable for battery voltage
-FastPID ExternalPid(0, 0, 0, 0, 16, true);
+extern Setpoints_struct Setpoints;      // setpoints for externalPID (speed,accel)
 
-void ExternalPid_Init(ExternalPid_struct parameters) {
-  ExternalPid.configure(parameters.P,parameters.I,parameters.D,0,16,true);
+
+void ExternalPid_Init() {
+  ExternalPid_coefficients.P=5;
+  ExternalPid_coefficients.I=0;
+  ExternalPid_coefficients.D=0;
+  FastPID_configure(ExternalPid_coefficients.P,ExternalPid_coefficients.I,ExternalPid_coefficients.D,0,16,true);
+  Setpoints.enabled=true;
+  Setpoints.speed=100;
 }
 void ExternalPid_setCoefficients(ExternalPid_struct parameters) {
-  ExternalPid.setCoefficients(parameters.P,parameters.I,parameters.D);
+  FastPID_setCoefficients(parameters.P,parameters.I,parameters.D);
 }
 
-void ExternalPID_Step(int16_t setpoint, int16_t feedback) {
-  ExternalPid.step(setpoint, feedback, HAL_GetTick());
+uint16_t ExternalPID_Step(int16_t setpoint, int16_t feedback) {
+  return FastPID_step(setpoint, feedback);
 }
