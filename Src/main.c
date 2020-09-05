@@ -277,7 +277,7 @@ int main(void) {
       // ####### VARIANT_HOVERCAR #######
       #ifdef VARIANT_HOVERCAR
         #ifdef CONTROL_APP_BLUETOOTH
-          if(Setpoints.enabled) {
+          if(Setpoints.enabled && speed > Setpoints.speed) {
             speed = FastPID_step(Setpoints.speed, speedAvg);
           }
         #endif

@@ -7,7 +7,7 @@
 Setpoints_struct Setpoints;      // setpoints for externalPID (speed,accel)
 
 void FastPID_init() {
-  FastPID_configure(5,0,0,0,16,true);
+  FastPID_configure(2,1,0.2,0,16,true);
   Setpoints.enabled=true;
   Setpoints.speed=100;
 }
@@ -80,7 +80,7 @@ bool FastPID_configure(float kp, float ki, float kd, uint16_t db, int bits, bool
 uint32_t FastPID_floatToParam(float in) {
   if (in > PARAM_MAX || in < 0) {
     FastPID__cfg_err = true;
-    return 0;
+    return PARAM_MAX;
   }
   return in * PARAM_MULT;
 }

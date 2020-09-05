@@ -112,9 +112,9 @@ void SendTelemetry() {
         (int16_t)board_temp_deg_c / 10, //board temperature
         rtP_Right.z_ctrlTypSel,         // control type
         rtU_Right.z_ctrlModReq,          // control mode
-        FastPID__p*1000,               // speed PID-controller P value  
-        FastPID__i*1000,                // speed PID-controller I value  
-        FastPID__d*1000                // speed PID-controller D value  
+        FastPID__p,               // speed PID-controller P value  
+        FastPID__i,                // speed PID-controller I value  
+        FastPID__d                // speed PID-controller D value  
       );
     } else if(telemetryTimer%2 == 0) { // these values are sent every second time
       sprintf((char *)(uintptr_t)uart_buf,
