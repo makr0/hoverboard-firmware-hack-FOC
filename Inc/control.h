@@ -23,9 +23,15 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
+#include <stdbool.h>
+
 #if defined(CONTROL_APP_BLUETOOTH)
 void AppExecuteCommand();
 int strStartsWith(char *pre, char *str);
+
+void sendNewValue(char *format, int16_t value);
+void ExecuteAutoControl();
+void app_rx_process_data();
 #endif
 #endif
 

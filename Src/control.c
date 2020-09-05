@@ -9,6 +9,8 @@
 #include "control.h"
 #include "stm32f1xx_ll_dma.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
+#include <FastPID.h>
+
 
 
 TIM_HandleTypeDef TimHandle;
@@ -24,7 +26,7 @@ extern I2C_HandleTypeDef hi2c2;
 extern DMA_HandleTypeDef hdma_i2c2_rx;
 extern DMA_HandleTypeDef hdma_i2c2_tx;
 
-extern volatile uint8_t usart_rx_dma_buffer[255];
+extern uint8_t usart_rx_dma_buffer[255];
 extern UART_HandleTypeDef huart3;
 uint8_t new_command_available;
 extern uint8_t BAT_CELLS;
@@ -259,6 +261,7 @@ extern uint8_t  ctrlModReq;             // global variable for control mode requ
 extern int16_t  speedAvg;               // average speed
 int16_t controlTypeSwitchUpSpeed = 600;   // switch up to sinus control type at this speed
 int16_t controlTypeSwitchDownSpeed = 550; // switch down to FOC control type at this speed
+extern Setpoints_struct Setpoints;               // setpoints for FastPID (speed,accel)
 
  void USART3_IRQHandler(void) {
     /* Check for IDLE line interrupt */
@@ -322,8 +325,7 @@ void AppExecuteCommand() {
   if(strStartsWith("!maxRPM", usart_rx_dma_buffer)) {
     int16_t rpm = atoi(usart_rx_dma_buffer+strlen("!maxRPM"));
     if(rpm > 0 && rpm <= 1500) {
-      rtP_Right.n_max = rpm << 4; // fixdt(1,16,4)
-      rtP_Left.n_max = rtP_Right.n_max; // fixdt(1,16,4)
+      Setpoints.speed = rpm; // fixdt(1,16,4)
     }
     sendNewValue("*R%i*",rpm);
   }
@@ -377,7 +379,13 @@ void AppExecuteCommand() {
   if(strStartsWith("!ctrlM", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!ctrlM"));
     if(value >= 0 && value <= 3) {
-      ctrlModReq= value;
+      if(value == 2) { // speed mode maps to external PID
+        ctrlModReq = 3; //FOC
+        Setpoints.enabled = true;
+      } else {
+        ctrlModReq= value;
+        Setpoints.enabled = false;
+      }
       sendNewValue("*m%i*",value);
     }
   }
@@ -397,18 +405,23 @@ void AppExecuteCommand() {
   }
   if(strStartsWith("!speedP", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedP"));
-    if(value >= 0 && value <= 5000) {
-      rtP_Left.cf_nKp = value;
-      rtP_Right.cf_nKp = value;
-      sendNewValue("*P%i*",value);
+    if(value >= 0 && value <= 3000) {
+      FastPID_setCoefficient_P(value/1000.0);
+      sendNewValue("*P%i*",FastPID__p);
     }
   }
   if(strStartsWith("!speedI", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedI"));
-    if(value >= 0 && value <= 5000) {
-      rtP_Left.cf_nKi = value;
-      rtP_Right.cf_nKi = value;
-      sendNewValue("*I%i*",value);
+    if(value >= 0 && value <= 3000) {
+      FastPID_setCoefficient_I(value/1000.0);
+      sendNewValue("*I%i*",FastPID__i);
+    }
+  }
+  if(strStartsWith("!speedD", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedD"));
+    if(value >= 0 && value <= 3000) {
+      FastPID_setCoefficient_D(value/1000.0);
+      sendNewValue("*D%i*",FastPID__d);
     }
   }
 
