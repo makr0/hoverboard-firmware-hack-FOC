@@ -8,8 +8,8 @@ Setpoints_struct Setpoints;      // setpoints for externalPID (speed,accel)
 
 void FastPID_init() {
   FastPID_configure(2,1,0.2,0,16,true);
-  Setpoints.enabled=true;
-  Setpoints.speed=100;
+  Setpoints.enabled=false;
+  Setpoints.speed=200;
 }
 
 void FastPID_clear() {
