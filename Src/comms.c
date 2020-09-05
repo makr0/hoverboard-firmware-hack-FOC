@@ -7,12 +7,12 @@
 #include "comms.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
 #include "energy.h"
-
+#include <FastPID.h>
 
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-static volatile uint8_t uart_buf[255];
+static char uart_buf[255];
 static volatile int16_t ch_buf[8];
 //volatile char char_buf[300];
 
@@ -106,13 +106,15 @@ void SendTelemetry() {
         "*M%i*" // Control Type 0 = Commutation , 1 = Sinusoidal, 2 = FOC
         "*m%i*"
         "*P%i"
-        "*I%i", // control mode 0 = Open, 1 = VOLTAGE, 2 = SPEED, 3 = TORQUE
+        "*I%i"
+        "*D%i", 
         adc_buffer.batt1,
         (int16_t)board_temp_deg_c / 10, //board temperature
         rtP_Right.z_ctrlTypSel,         // control type
         rtU_Right.z_ctrlModReq,          // control mode
-        rtP_Left.cf_nKp,               // speed PID-controller P value  
-        rtP_Left.cf_nKi                // speed PID-controller I value  
+        FastPID__p*1000,               // speed PID-controller P value  
+        FastPID__i*1000,                // speed PID-controller I value  
+        FastPID__d*1000                // speed PID-controller D value  
       );
     } else if(telemetryTimer%2 == 0) { // these values are sent every second time
       sprintf((char *)(uintptr_t)uart_buf,
