@@ -447,6 +447,7 @@ int main(void) {
       if (main_loop_counter % 4 == 0) {    // Send data periodically every 20 ms
         SendTelemetry();
         AppExecuteCommand();
+        ExecuteAutoControl();
       }
     #endif
 

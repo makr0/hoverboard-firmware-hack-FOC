@@ -256,7 +256,9 @@ extern P    rtP_Right;                  /* right motor */
 extern ExtU rtU_Left;                   /* External inputs */
 extern ExtU rtU_Right;                   /* External inputs */
 extern uint8_t  ctrlModReq;             // global variable for control mode request 
-
+extern int16_t  speedAvg;               // average speed
+int16_t controlTypeSwitchUpSpeed = 600;   // switch up to sinus control type at this speed
+int16_t controlTypeSwitchDownSpeed = 550; // switch down to FOC control type at this speed
 
  void USART3_IRQHandler(void) {
     /* Check for IDLE line interrupt */
@@ -319,7 +321,7 @@ void AppExecuteCommand() {
 
   if(strStartsWith("!maxRPM", usart_rx_dma_buffer)) {
     int16_t rpm = atoi(usart_rx_dma_buffer+strlen("!maxRPM"));
-    if(rpm > 0 && rpm <= 1000) {
+    if(rpm > 0 && rpm <= 1500) {
       rtP_Right.n_max = rpm << 4; // fixdt(1,16,4)
       rtP_Left.n_max = rtP_Right.n_max; // fixdt(1,16,4)
     }
@@ -379,8 +381,55 @@ void AppExecuteCommand() {
       sendNewValue("*m%i*",value);
     }
   }
+  if(strStartsWith("!switchUp", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!switchUp"));
+    if(value >= 0 && value <= 1000) {
+      controlTypeSwitchUpSpeed = value;
+      sendNewValue("*U%i*",value);
+    }
+  }
+  if(strStartsWith("!switchDown", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!switchDown"));
+    if(value >= 0 && value <= 1000) {
+      controlTypeSwitchDownSpeed = value;
+      sendNewValue("*u%i*",value);
+    }
+  }
+  if(strStartsWith("!speedP", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedP"));
+    if(value >= 0 && value <= 5000) {
+      rtP_Left.cf_nKp = value;
+      rtP_Right.cf_nKp = value;
+      sendNewValue("*P%i*",value);
+    }
+  }
+  if(strStartsWith("!speedI", usart_rx_dma_buffer)) {
+    int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedI"));
+    if(value >= 0 && value <= 5000) {
+      rtP_Left.cf_nKi = value;
+      rtP_Right.cf_nKi = value;
+      sendNewValue("*I%i*",value);
+    }
+  }
 
   new_command_available=0;
+}
+
+void ExecuteAutoControl() {
+  if(rtP_Right.z_ctrlTypSel == 1 // sinus
+     && speedAvg <= controlTypeSwitchDownSpeed )
+  {
+      rtP_Right.z_ctrlTypSel = 2; // FOC
+      rtP_Left.z_ctrlTypSel = 2;
+      return;
+  }
+  if(rtP_Right.z_ctrlTypSel == 2 // FOC
+     && speedAvg >= controlTypeSwitchUpSpeed )
+  {
+      rtP_Right.z_ctrlTypSel = 1; // sinus
+      rtP_Left.z_ctrlTypSel = 1;
+      return;
+  }
 }
 
 void sendNewValue(char *format, int16_t value) {
