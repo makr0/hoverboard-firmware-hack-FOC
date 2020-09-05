@@ -31,6 +31,7 @@
 #include "comms.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
 #include "rtwtypes.h"
+#include "externalPid.h"
 
 #if defined(DEBUG_I2C_LCD) || defined(SUPPORT_LCD)
 #include "hd44780.h"
@@ -150,6 +151,7 @@ static int16_t    speed;                // local variable for speed. -1000 to 10
 
 static uint32_t    inactivity_timeout_counter;
 static MultipleTap MultipleTapBreak;    // define multiple tap functionality for the Break pedal
+FastPID speedPID(Kp, Ki, Kd, deadband, output_bits, output_signed);
 
 
 int main(void) {
@@ -441,6 +443,7 @@ int main(void) {
     #endif
     #ifdef CONTROL_APP_BLUETOOTH
       Energycounters_Step();
+      ExternalPid
       if (main_loop_counter % 4 == 0) {    // Send data periodically every 20 ms
         SendTelemetry();
         AppExecuteCommand();
