@@ -405,23 +405,23 @@ void AppExecuteCommand() {
   }
   if(strStartsWith("!speedP", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedP"));
-    if(value >= 0 && value <= 5000) {
-      FastPID_setCoefficient_P((float)value);
-      sendNewValue("*P%i*",value);
+    if(value >= 0 && value <= 3000) {
+      FastPID_setCoefficient_P(value/1000.0);
+      sendNewValue("*P%i*",FastPID__p);
     }
   }
   if(strStartsWith("!speedI", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedI"));
-    if(value >= 0 && value <= 5000) {
-      FastPID_setCoefficient_I((float)value);
-      sendNewValue("*I%i*",value);
+    if(value >= 0 && value <= 3000) {
+      FastPID_setCoefficient_I(value/1000.0);
+      sendNewValue("*I%i*",FastPID__i);
     }
   }
   if(strStartsWith("!speedD", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedD"));
-    if(value >= 0 && value <= 5000) {
-      FastPID_setCoefficient_D((float)value);
-      sendNewValue("*D%i*",value);
+    if(value >= 0 && value <= 3000) {
+      FastPID_setCoefficient_D(value/1000.0);
+      sendNewValue("*D%i*",FastPID__d);
     }
   }
 
