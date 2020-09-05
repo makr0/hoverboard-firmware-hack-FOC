@@ -209,6 +209,11 @@ void BLDC_Init(void) {
   rtP_Left.a_phaAdvMax          = PHASE_ADV_MAX << 4;                   // fixdt(1,16,4)
   rtP_Left.r_fieldWeakHi        = FIELD_WEAK_HI << 4;                   // fixdt(1,16,4)
   rtP_Left.r_fieldWeakLo        = FIELD_WEAK_LO << 4;                   // fixdt(1,16,4)
+  rtP_Left.cf_nKp = 5;
+  rtP_Right.cf_nKp = 5;
+  rtP_Left.cf_nKi = 430;
+  rtP_Right.cf_nKi = 430;
+
 
   rtP_Right                     = rtP_Left;     // Copy the Left motor parameters to the Right motor parameters
   rtP_Right.b_selPhaABCurrMeas  = 0;            // Right motor measured current phases {Blue, Yellow} = {iB, iC} -> do NOT change
@@ -361,17 +366,17 @@ void Input_Init(void) {
 /* =========================== General Functions =========================== */
 
 void poweronMelody(void) {
-	for (int i = 8; i > 4; i--) {
+	for (int i = 8; i > 0; i--) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(1);
+		HAL_Delay(20);
 	}
 	buzzerFreq = 0;
 }
 
 void poweroffMelody(void){
-	for (int i = 4; i < 8; i++) {
+	for (int i = 0; i < 8; i++) {
 		buzzerFreq = (uint8_t)i;
-		HAL_Delay(1);
+		HAL_Delay(20);
 	}
 	buzzerFreq = 0;
 }
@@ -615,9 +620,9 @@ void poweroff(void) {
 void poweroffPressCheck(void) {
 	#if defined(CONTROL_ADC)
       if(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
-        enable = 0;
+        enable = 0;                       // disable motors
         uint16_t cnt_press = 0;
-        while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
+        while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { 
           HAL_Delay(10);
           if (cnt_press++ == 5 * 100) {
             shortBeep(5); 
@@ -639,7 +644,11 @@ void poweroffPressCheck(void) {
             shortBeep(5);
           }
         } else {                                            // Short press: power off
-          poweroff();
+          if(__HAL_RCC_GET_FLAG(RCC_FLAG_SFTRST)) {         // do not power off after software reset (from a programmer/debugger) 
+              __HAL_RCC_CLEAR_RESET_FLAGS();                // clear reset flags 
+          } else { 
+            poweroff();                                     // release power-latch 
+          } 
         }
       }
     #elif defined(VARIANT_TRANSPOTTER)

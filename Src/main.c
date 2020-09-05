@@ -31,6 +31,8 @@
 #include "comms.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
 #include "rtwtypes.h"
+#include <FastPID.h>
+
 
 #if defined(DEBUG_I2C_LCD) || defined(SUPPORT_LCD)
 #include "hd44780.h"
@@ -80,7 +82,7 @@ extern uint8_t enable;                  // global variable for motor enable
 extern volatile uint32_t timeout;       // global variable for timeout
 extern int16_t batVoltage;              // global variable for battery voltage
 extern uint8_t BAT_CELLS;       // battery number of cells. Normal Hoverboard battery: 10s
-
+extern Setpoints_struct Setpoints;      // setpoints for externalPID (speed,accel)
 
 #if defined(SIDEBOARD_SERIAL_USART2)
 extern SerialSideboard Sideboard_L;
@@ -185,6 +187,7 @@ int main(void) {
   Input_Init();       // Input Init
   motor_i_max_from_eeprom = rtP_Left.i_max;
   Energycounters_Init(1000 / (DELAY_IN_MAIN_LOOP + 1) );
+  FastPID_init();
 
   HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_SET);
 
@@ -192,6 +195,7 @@ int main(void) {
   HAL_ADC_Start(&hadc2);  
 
   poweronMelody();
+  HAL_Delay(100);
   HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
 
   int16_t speedL     = 0, speedR     = 0;
@@ -272,6 +276,12 @@ int main(void) {
 
       // ####### VARIANT_HOVERCAR #######
       #ifdef VARIANT_HOVERCAR
+        #ifdef CONTROL_APP_BLUETOOTH
+          if(Setpoints.enabled && speed > Setpoints.speed) {
+            speed = FastPID_step(Setpoints.speed, speedAvg);
+          }
+        #endif
+
         #if MULTIPLE_TAP_NR != 0
           if (!MultipleTapBreak.b_multipleTap) {  // Check driving direction
             speed = steer + speed;                // Forward driving          
@@ -444,6 +454,7 @@ int main(void) {
       if (main_loop_counter % 4 == 0) {    // Send data periodically every 20 ms
         SendTelemetry();
         AppExecuteCommand();
+        ExecuteAutoControl();
       }
     #endif
 
