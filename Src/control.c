@@ -406,21 +406,21 @@ void AppExecuteCommand() {
   if(strStartsWith("!speedP", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedP"));
     if(value >= 0 && value <= 5000) {
-      FastPID_setCoefficients((float)value,FastPID__i,FastPID__d);
+      FastPID_setCoefficient_P((float)value);
       sendNewValue("*P%i*",value);
     }
   }
   if(strStartsWith("!speedI", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedI"));
     if(value >= 0 && value <= 5000) {
-      FastPID_setCoefficients(FastPID__p,(float)value,FastPID__d);
+      FastPID_setCoefficient_I((float)value);
       sendNewValue("*I%i*",value);
     }
   }
   if(strStartsWith("!speedD", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedD"));
     if(value >= 0 && value <= 5000) {
-      FastPID_setCoefficients(FastPID__p,FastPID__i,(float)value);
+      FastPID_setCoefficient_D((float)value);
       sendNewValue("*D%i*",value);
     }
   }

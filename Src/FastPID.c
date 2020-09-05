@@ -26,6 +26,18 @@ bool FastPID_setCoefficients(float kp, float ki, float kd) {
   FastPID__d = FastPID_floatToParam(kd);
   return ! FastPID__cfg_err;
 }
+bool FastPID_setCoefficient_P(float kp) {
+  FastPID__p = FastPID_floatToParam(kp);
+  return ! FastPID__cfg_err;
+}
+bool FastPID_setCoefficient_I(float ki) {
+  FastPID__i = FastPID_floatToParam(ki);
+  return ! FastPID__cfg_err;
+}
+bool FastPID_setCoefficient_D(float kd) {
+  FastPID__d = FastPID_floatToParam(kd);
+  return ! FastPID__cfg_err;
+}
 
 bool FastPID_setDeadband(uint16_t db) {
   if (db != 0 && FastPID__i == 0 && FastPID__d == 0) {

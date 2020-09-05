@@ -36,6 +36,10 @@
 
   void FastPID_init();
   bool FastPID_setCoefficients(float kp, float ki, float kd);
+  bool FastPID_setCoefficient_P(float kp);
+  bool FastPID_setCoefficient_I(float ki);
+  bool FastPID_setCoefficient_D(float kd);
+  
   bool FastPID_setDeadband(uint16_t db);
   bool FastPID_setOutputConfig(int bits, bool sign);
   void FastPID_clear();
