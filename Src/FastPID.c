@@ -3,11 +3,13 @@
 #include <stdint.h>
 #include "control.h"
 #include <FastPID.h>
+#include "stm32f1xx_hal.h"
+
 
 Setpoints_struct Setpoints;      // setpoints for externalPID (speed,accel)
 
 void FastPID_init() {
-  FastPID_configure(2,1,0.2,0,16,true);
+  FastPID_configure(2,1,0.01,0,16,true);
   Setpoints.enabled=false;
   Setpoints.speed=200;
 }

@@ -279,6 +279,8 @@ int main(void) {
         #ifdef CONTROL_APP_BLUETOOTH
           if(Setpoints.enabled && speed > Setpoints.speed) {
             speed = FastPID_step(Setpoints.speed, speedAvg);
+          } else {
+            FastPID_clear();
           }
         #endif
 

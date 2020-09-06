@@ -382,6 +382,7 @@ void AppExecuteCommand() {
       if(value == 2) { // speed mode maps to external PID
         ctrlModReq = 3; //FOC
         Setpoints.enabled = true;
+        FastPID_clear();
       } else {
         ctrlModReq= value;
         Setpoints.enabled = false;
@@ -407,21 +408,21 @@ void AppExecuteCommand() {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedP"));
     if(value >= 0 && value <= 3000) {
       FastPID_setCoefficient_P(value/1000.0);
-      sendNewValue("*P%i*",FastPID__p);
+      sendNewValue("*P%li*",(uint32_t)(((float)FastPID__p / PARAM_MULT) * 1000.0));
     }
   }
   if(strStartsWith("!speedI", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedI"));
     if(value >= 0 && value <= 3000) {
       FastPID_setCoefficient_I(value/1000.0);
-      sendNewValue("*I%i*",FastPID__i);
+      sendNewValue("*I%li*",(uint32_t)(((float)FastPID__i / PARAM_MULT) * 1000.0));
     }
   }
   if(strStartsWith("!speedD", usart_rx_dma_buffer)) {
     int16_t value = atoi(usart_rx_dma_buffer+strlen("!speedD"));
     if(value >= 0 && value <= 3000) {
       FastPID_setCoefficient_D(value/1000.0);
-      sendNewValue("*D%i*",FastPID__d);
+      sendNewValue("*D%li*",(uint32_t)(((float)FastPID__d / PARAM_MULT) * 1000.0));
     }
   }
 
