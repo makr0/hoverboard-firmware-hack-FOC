@@ -32,6 +32,7 @@ int strStartsWith(char *pre, char *str);
 void sendNewValue(char *format, int16_t value);
 void ExecuteAutoControl();
 void app_rx_process_data();
+void sendPanel(int panel);
 #endif
 #endif
 
