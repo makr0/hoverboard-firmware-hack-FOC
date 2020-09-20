@@ -626,16 +626,16 @@ void poweroffPressCheck(void) {
           HAL_Delay(10);
           if (cnt_press++ == 5 * 100) {
             shortBeep(5); 
-            consoleLog("Double press: Adjust Max Current, Max Speed");                         
+            consoleLog("Double press: send UI Panels");                         
             consoleLog("release to update ADC limits");                
           }          
         }
         if (cnt_press >= 2 * 100) {// Check if press is more than 2 sec
           HAL_Delay(500);        
-          if (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {  // Double press: Adjust Max Current, Max Speed
+          if (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {  // Double press: send UI Panel0 for BT App
             while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { HAL_Delay(10); }  
             longBeep(8);
-            updateCurSpdLim();
+            sendPanel(0);
             shortBeep(5);
           } else {                                          // Long press: Calibrate ADC Limits
             longBeep(2);
