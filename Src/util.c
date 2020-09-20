@@ -626,7 +626,7 @@ void poweroffPressCheck(void) {
       if(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
         //enable = 0;
         uint16_t cnt_press = 0;
-        while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) {
+        while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { 
           HAL_Delay(10);
           if (cnt_press++ == 75) {
             shortBeep(2); 

@@ -7,12 +7,12 @@
 #include "comms.h"
 #include "BLDC_controller.h"      /* BLDC's header file */
 #include "energy.h"
-
+#include <FastPID.h>
 
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-static volatile uint8_t uart_buf[255];
+static char uart_buf[255];
 static volatile int16_t ch_buf[8];
 //volatile char char_buf[300];
 
@@ -98,17 +98,23 @@ extern EnergyCounters_struct EnergyCounters;
 extern uint8_t BAT_CELLS;
 
 void SendTelemetry() {
-    if (telemetryTimer %200 == 0) {  // send Temperature and voltage calibration 
+    if (telemetryTimer %100 == 0) {  // send Temperature and voltage calibration 
                                     // only every 200th time this function is called
       sprintf((char *)(uintptr_t)uart_buf,
         "*v%i*"  // for voltage calibration
         "*T%i*" // board Temperature
         "*M%i*" // Control Type 0 = Commutation , 1 = Sinusoidal, 2 = FOC
-        "*m%i*\n", // control mode 0 = Open, 1 = VOLTAGE, 2 = SPEED, 3 = TORQUE
+        "*m%i*"
+        "*P%li"
+        "*I%li"
+        "*D%li", 
         adc_buffer.batt1,
         (int16_t)board_temp_deg_c / 10, //board temperature
         rtP_Right.z_ctrlTypSel,         // control type
-        rtU_Right.z_ctrlModReq          // control mode
+        rtU_Right.z_ctrlModReq,          // control mode
+        (uint32_t)(((float)FastPID__p / PARAM_MULT) * 1000.0),               // speed PID-controller P value  
+        (uint32_t)(((float)FastPID__i/ PARAM_MULT) * 1000.0),                // speed PID-controller I value  
+        (uint32_t)(((float)FastPID__d/ PARAM_MULT) * 1000.0)                // speed PID-controller D value  
       );
     } else if(telemetryTimer%2 == 0) { // these values are sent every second time
       sprintf((char *)(uintptr_t)uart_buf,
