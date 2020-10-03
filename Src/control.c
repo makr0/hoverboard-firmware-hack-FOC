@@ -24,6 +24,8 @@ uint8_t i2cBuffer[2];
 extern I2C_HandleTypeDef hi2c2;
 extern DMA_HandleTypeDef hdma_i2c2_rx;
 extern DMA_HandleTypeDef hdma_i2c2_tx;
+extern int16_t curDC_max;
+
 
 extern uint8_t usart_rx_dma_buffer[255];
 extern UART_HandleTypeDef huart3;
@@ -490,6 +492,17 @@ void AppExecuteCommand()
       sendPanel(value);
     }
   }
+  if (strStartsWith("!maxCur", usart_rx_dma_buffer))
+  {
+    int16_t value = atoi(usart_rx_dma_buffer + strlen("!maxCur"));
+    if (value >= 0 && value <= 100) {
+      rtP_Left.i_max = ((value / 2) * A2BIT_CONV) << 4;        // fixdt(1,16,4)
+      rtP_Right.i_max = rtP_Left.i_max;
+      curDC_max = ((value +2) * A2BIT_CONV);
+    }
+  }
+
+
 
   new_command_available = 0;
 }
