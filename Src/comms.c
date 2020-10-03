@@ -96,6 +96,8 @@ extern int16_t cmd1;                    // brake input
 extern int16_t cmd2;                    // speed input
 extern EnergyCounters_struct EnergyCounters;
 extern uint8_t BAT_CELLS;
+extern int16_t curDC_max;
+
 
 void SendTelemetry() {
     if (telemetryTimer %100 == 0) {  // send Temperature and voltage calibration 
@@ -103,6 +105,7 @@ void SendTelemetry() {
       sprintf((char *)(uintptr_t)uart_buf,
         "*v%i*"  // for voltage calibration
         "*T%i*" // board Temperature
+        "*C%i"  // max current
         "*M%i*" // Control Type 0 = Commutation , 1 = Sinusoidal, 2 = FOC
         "*m%i*"
         "*P%li"
@@ -110,6 +113,7 @@ void SendTelemetry() {
         "*D%li", 
         adc_buffer.batt1,
         (int16_t)board_temp_deg_c / 10, //board temperature
+        curDC_max / A2BIT_CONV,
         rtP_Right.z_ctrlTypSel,         // control type
         rtU_Right.z_ctrlModReq,          // control mode
         (uint32_t)(((float)FastPID__p / PARAM_MULT) * 1000.0),               // speed PID-controller P value  
