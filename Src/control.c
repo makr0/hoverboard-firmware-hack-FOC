@@ -554,7 +554,7 @@ void sendPanel(int panel)
     consoleLog(uart_buf);
     sendNewValue("add_text(0,4,large,L,%s,255,255,255,)\n",PARAM_MAX);
   }
-  if (panel == 1)
+  if (panel == 1) // Tacho
   {
     char *uart_buf = "*.kwl\nclear_panel()\n"
                      "set_grid_size(12,6)\n"
@@ -582,7 +582,7 @@ void sendPanel(int panel)
                      "add_button(11,5,5,!panel2.,)\n";
     consoleLog(uart_buf);
   }
-  if (panel == 2)
+  if (panel == 2) // PID settings
   {
     char *uart_buf = "*.kwl\nclear_panel()\n"
                      "set_grid_size(17,9)\n"
@@ -610,7 +610,7 @@ void sendPanel(int panel)
     consoleLog(uart_buf);
   }
 
-  if (panel == 3)
+  if (panel == 3) // other settings (overdrive, mode, ...)
   {
     char *uart_buf = "*.kwl\nclear_panel()\n"
                      "set_grid_size(19,9)\n"
