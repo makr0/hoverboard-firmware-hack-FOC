@@ -554,35 +554,39 @@ void sendPanel(int panel)
     consoleLog(uart_buf);
     sendNewValue("add_text(0,4,large,L,%s,255,255,255,)\n",PARAM_MAX);
   }
-  if (panel == 1)
+  if (panel == 1) // Tacho
   {
     char *uart_buf = "*.kwl\nclear_panel()\n"
-                     "set_grid_size(12,6)\n"
-                     "add_text(2,0,xlarge,L,A,245,240,245,)\n"
-                     "add_text(6,5,xlarge,R,408,245,240,245,c)\n"
-                     "add_text(7,5,xlarge,L,V,245,240,245,)\n"
-                     "add_text(1,1,large,R,473,245,240,245,d)\n"
-                     "add_text(2,1,medium,L,m,245,240,245,)\n"
-                     "add_text(5,3,xlarge,R,0,245,240,245,S)\n"
-                     "add_text(5,2,xlarge,L,150,255,53,47,R)\n"
-                     "add_text(5,4,large,L,rpm,245,240,245,)\n"
-                     "add_text(1,0,xlarge,R,0,245,240,245,A)\n"
-                     "add_text(11,0,large,R,Limiter,245,240,245,)\n"
-                     "add_button(9,5,23,!numcells13.,)\n"
-                     "add_button(8,5,22,!numcells12.,)\n"
-                     "add_button(3,0,27,!maxRPM150.,)\n"
-                     "add_button(5,0,29,!maxRPM230.,)\n"
-                     "add_button(9,0,17,!maxRPM500.,)\n"
-                     "add_switch(11,1,3,!ctrlM2.,!ctrlM3.,0,1)\n"
-                     "add_led(7,0,2,O,0,0,0)\n"
-                     "add_gauge(0,5,5,330,420,408,c,3.3v,4.2v,9,2)\n"
-                     "add_roll_graph(6,2,5,0.0,600.0,300,S,rpm,,,0,0,1,0,0,1,medium,none,1,1,251,199,51)\n"
-                     "add_roll_graph(0,2,5,0.0,30.0,300,A,A,,,0,0,1,0,0,1,medium,none,1,1,255,255,255)\n"
-                     "add_button(11,4,9,!panel0.,)\n"
-                     "add_button(11,5,5,!panel2.,)\n";
+      "set_grid_size(12,6)\n"
+      "add_text(11,0,large,R,Limiter,245,240,245,)\n"
+      "add_text(0,5,xlarge,R,0,245,240,245,A)\n"
+      "add_text(1,5,xlarge,L,A,245,240,245,)\n"
+      "add_text(2,4,xlarge,R,0,245,240,245,S)\n"
+      "add_text(3,4,large,L,rpm,245,240,245,)\n"
+      "add_text(2,0,large,R,0,245,240,245,d)\n"
+      "add_text(3,0,medium,L,m,245,240,245,)\n"
+      "add_text(2,2,xlarge,R,412,245,240,245,c)\n"
+      "add_text(3,2,xlarge,L,V,245,240,245,)\n"
+      "add_text(7,5,xlarge,L,150,255,53,47,R)\n"
+      "add_text(8,0,xlarge,L,C,245,240,245,C)\n"
+      "add_text(9,0,xlarge,L,A,245,240,245,)\n"
+      "add_button(9,5,23,!numcells13.,)\n"
+      "add_button(8,5,22,!numcells12.,)\n"
+      "add_button(11,4,9,!panel0.,)\n"
+      "add_button(11,5,5,!panel2.,)\n"
+      "add_button(9,3,29,!maxRPM230.,)\n"
+      "add_button(7,3,27,!maxRPM150.,)\n"
+      "add_button(8,2,17,!maxRPM500.,)\n"
+      "add_switch(11,1,3,!ctrlM2.,!ctrlM3.,0,1)\n"
+      "add_slider(4,0,2,0,100,0,!maxCur,.,0)\n"
+      "add_led(9,1,2,O,0,0,0)\n"
+      "add_gauge(0,0,3,0,50,0,A,0,50,0,0)\n"
+      "add_gauge(1,1,5,330,420,412,c,3.3v,4.2v,9,2)\n"
+      "add_gauge(1,3,4,0,800,0,S,0,800,0,0)\n"
+      "set_panel_notes(-,,,)\n";
     consoleLog(uart_buf);
   }
-  if (panel == 2)
+  if (panel == 2) // PID settings
   {
     char *uart_buf = "*.kwl\nclear_panel()\n"
                      "set_grid_size(17,9)\n"
@@ -610,7 +614,7 @@ void sendPanel(int panel)
     consoleLog(uart_buf);
   }
 
-  if (panel == 3)
+  if (panel == 3) // other settings (overdrive, mode, ...)
   {
     char *uart_buf = "*.kwl\nclear_panel()\n"
                      "set_grid_size(19,9)\n"
