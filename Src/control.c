@@ -351,6 +351,7 @@ void AppExecuteCommand()
   if (!new_command_available)
     return;
 
+  // max rpm for Speed PID control
   if (strStartsWith("!maxRPM", usart_rx_dma_buffer))
   {
     int16_t rpm = atoi(usart_rx_dma_buffer + strlen("!maxRPM"));
@@ -550,7 +551,9 @@ void sendPanel(int panel)
                      "add_button(2,1,22,!panel2.,)\n"
                      "add_text(3,1,xlarge,L,PID,255,255,255,)\n"
                      "add_button(2,2,23,!panel3.,)\n"
-                     "add_text(3,2,xlarge,L,Overdrive,255,255,255,)\n";
+                     "add_text(3,2,xlarge,L,Overdrive,255,255,255,)\n"
+                     "add_button(2,3,23,!panel4.,)\n"
+                     "add_text(3,3,xlarge,L,Tacho2,255,255,255,)\n";
     consoleLog(uart_buf);
     sendNewValue("add_text(0,4,large,L,%s,255,255,255,)\n",PARAM_MAX);
   }
@@ -559,16 +562,18 @@ void sendPanel(int panel)
     char *uart_buf = "*.kwl\nclear_panel()\n"
       "set_grid_size(12,6)\n"
       "add_text(11,0,large,R,Limiter,245,240,245,)\n"
-      "add_text(0,5,xlarge,R,0,245,240,245,A)\n"
+      "add_text(0,5,xlarge,R,###,245,240,245,A)\n"
       "add_text(1,5,xlarge,L,A,245,240,245,)\n"
-      "add_text(2,4,xlarge,R,0,245,240,245,S)\n"
-      "add_text(3,4,large,L,rpm,245,240,245,)\n"
+      "add_text(2,4,xlarge,R,###,245,240,245,S)\n"
+      "add_text(3,4,large,L,km/h,245,240,245,)\n"
+      "add_text(3,5,xlarge,R,###,245,240,245,W)\n"
+      "add_text(4,5,large,L,Wh,245,240,245,)\n"
       "add_text(2,0,large,R,0,245,240,245,d)\n"
       "add_text(3,0,medium,L,m,245,240,245,)\n"
-      "add_text(2,2,xlarge,R,412,245,240,245,c)\n"
+      "add_text(2,2,xlarge,R,###,245,240,245,c)\n"
       "add_text(3,2,xlarge,L,V,245,240,245,)\n"
-      "add_text(7,5,xlarge,L,150,255,53,47,R)\n"
-      "add_text(8,0,xlarge,L,C,245,240,245,C)\n"
+      "add_text(7,5,xlarge,L,###,255,53,47,R)\n"
+      "add_text(8,0,xlarge,L,###,245,240,245,C)\n"
       "add_text(9,0,xlarge,L,A,245,240,245,)\n"
       "add_button(9,5,23,!numcells13.,)\n"
       "add_button(8,5,22,!numcells12.,)\n"
@@ -578,11 +583,11 @@ void sendPanel(int panel)
       "add_button(7,3,27,!maxRPM150.,)\n"
       "add_button(8,2,17,!maxRPM500.,)\n"
       "add_switch(11,1,3,!ctrlM2.,!ctrlM3.,0,1)\n"
-      "add_slider(4,0,2,0,100,0,!maxCur,.,0)\n"
+      "add_slider(4,0,2,0,100,40,!maxCur,.,0)\n"
       "add_led(9,1,2,O,0,0,0)\n"
       "add_gauge(0,0,3,0,50,0,A,0,50,0,0)\n"
       "add_gauge(1,1,5,330,420,412,c,3.3v,4.2v,9,2)\n"
-      "add_gauge(1,3,4,0,800,0,S,0,800,0,0)\n"
+      "add_gauge(1,3,4,0,40,0,S,0,40,0,0)\n"
       "set_panel_notes(-,,,)\n";
     consoleLog(uart_buf);
   }
@@ -670,5 +675,29 @@ void sendPanel(int panel)
                      "add_monitor(9,5,5,,2)\n";
     consoleLog(uart_buf);
   }
+  if (panel == 4) // Bastis Special panel
+  {
+    char *uart_buf = "*.kwl\nclear_panel()\n"
+                    "set_grid_size(8,5)\n"
+                    "add_text(0,0,xlarge,L,A,245,0,0,)\n"
+                    "add_text(0,1,xlarge,L,Upm,255,170,19,)\n"
+                    "add_text(2,1,xlarge,L,239,245,143,0,S)\n"
+                    "add_text(7,0,xlarge,L,27,245,240,245,C)\n"
+                    "add_text(2,0,xlarge,L,V,0,240,0,)\n"
+                    "add_text(3,0,xlarge,L,440,245,240,245,c)\n"
+                    "add_text(1,0,xlarge,L,0,245,240,245,A)\n"
+                    "add_button(6,4,23,13,!numcells13.)\n"
+                    "add_button(6,2,21,10,!numcells10.)\n"
+                    "add_button(6,3,22,12,!numcells12.)\n"
+                    "add_button(7,2,14,!ctrlM2.,)\n"
+                    "add_button(7,4,16,!ctrlM3.,)\n"
+                    "add_button(6,0,9,!panel0.,)\n"
+                    "add_slider(4,1,2,10,50,25,!maxCur,.,1)\n"
+                    "add_gauge(0,2,4,0,800,239,S,,,10,5)\n"
+                    "add_gauge(0,3,4,0,60,0,A,A,,10,5)\n"
+                    "add_gauge(0,4,5,300,420,420,c,3,4.2,9,2)\n";
+    consoleLog(uart_buf);
+  }
+
   HAL_Delay(100);
 }
