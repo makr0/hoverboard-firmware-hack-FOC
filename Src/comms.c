@@ -120,13 +120,28 @@ void SendTelemetry() {
         (uint32_t)(((float)FastPID__i/ PARAM_MULT) * 1000.0),                // speed PID-controller I value  
         (uint32_t)(((float)FastPID__d/ PARAM_MULT) * 1000.0)                // speed PID-controller D value  
       );
-    } else if(telemetryTimer%2 == 0) { // these values are sent every second time
+    } else if(telemetryTimer%2 == 0) { // these values are sent every 2nd time
+      sprintf((char *)(uintptr_t)uart_buf,
+        "*V%i*" // Battery Voltage
+        "*c%i*" // cell voltage
+        "*A%i*" // sum of motor currents
+        "*i%i*" // input cmd
+        "*I%i" // cmd1
+        "\n",
+        (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC), 
+        (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC) / (BAT_CELLS), 
+        (ABS(curR_DC) + ABS(curL_DC)) / A2BIT_CONV, 
+        adc_buffer.l_rx2,
+        cmd1
+      );
+     } else if(telemetryTimer%4 == 0) {
       sprintf((char *)(uintptr_t)uart_buf,
         "*OR%iG0B0*" // Are we in Overdrive? ( is input > FIELD_WEAK_LO and speed > n_fieldWeakAuthLo) sent as RGB values
         "*E%ld*"  // Ah
         "*d%ld*"  // distance (m)
         "*W%ld*"  // Wh
         "*t%ld*"  // current telemetryTimer
+        "*S%i*" // average speed in km/h 
         "\n",
 
         (
@@ -138,18 +153,8 @@ void SendTelemetry() {
         (uint32_t)(EnergyCounters.Ah * 1000.0),
         (uint32_t)(EnergyCounters.distance / (float)1000.0),
         (uint32_t)(EnergyCounters.Wh * 1.0),
-        telemetryTimer
-      );
-    } else{
-      sprintf((char *)(uintptr_t)uart_buf,
-        "*V%i*" // Battery Voltage
-        "*c%i*" // cell voltage
-        "*A%i*" // sum of motor currents
-        "*S%i*", // average speed
-        (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC), 
-        (batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC) / (BAT_CELLS), 
-        (ABS(curR_DC) + ABS(curL_DC)) / A2BIT_CONV, 
-        speedAvg
+        telemetryTimer,
+        0.1885 * speedAvg * (WHEEL_CIRCUMFENCE/1000/3.141) // speed(kmh) = 0.1885 * Wheel RPM * diameter of the tire(m) => quelle: internet (https://www.electrical4u.net/calculator/rpm-to-kmph-kmps-conversion-calculator/)
       );
     }
     consoleLog(uart_buf);
